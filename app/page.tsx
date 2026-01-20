@@ -9,7 +9,7 @@ export default async function HomePage() {
     listImagesPublic(),
     listFeaturedPublic()
   ]);
-  const previews = await Promise.all(albums.map((album) => listAlbumPreviewImages(album.id, 3)));
+  const previews = await Promise.all(albums.map((album) => listAlbumPreviewImages(album.id, 6)));
 
   return (
     <>
@@ -35,29 +35,6 @@ export default async function HomePage() {
               Curated highlights from recent shoots. For bookings and collaborations, reach out directly.
             </div>
           </section>
-          <section className="album-grid">
-            {albums.map((album, index) => (
-              <a className="album-card" key={album.id} href={`/albums/${album.public_id}`}>
-                <div className="album-badge">{album.tag || 'Album'}</div>
-                <h3>{album.title}</h3>
-                <p>{album.description || 'View album'}</p>
-                <div className="album-preview">
-                  {previews[index]?.map((image) => (
-                    <img
-                      key={image.id}
-                      src={image.thumb_url || image.url}
-                      alt={image.title || 'Album preview'}
-                      loading="lazy"
-                    />
-                  ))}
-                </div>
-                <div className="button ghost">View more</div>
-              </a>
-            ))}
-            {albums.length === 0 && (
-              <div className="notice">No public albums yet. Create one from the admin dashboard.</div>
-            )}
-          </section>
           {featured.length ? (
             <section className="featured">
               <div className="featured-header">
@@ -76,7 +53,44 @@ export default async function HomePage() {
                 ))}
               </div>
             </section>
-          ) : null}
+          ) : (
+            <section className="featured">
+              <div className="featured-header">
+                <h2>Featured</h2>
+                <p className="muted">Mark images as featured from the admin dashboard.</p>
+              </div>
+              <div className="notice">No featured images yet.</div>
+            </section>
+          )}
+          <section className="album-section">
+            <div className="featured-header">
+              <h2>Albums</h2>
+              <p className="muted">Browse curated collections and stories.</p>
+            </div>
+            <div className="album-grid">
+              {albums.map((album, index) => (
+                <a className="album-card" key={album.id} href={`/albums/${album.public_id}`}>
+                  <div className="album-badge">{album.tag || 'Album'}</div>
+                  <h3>{album.title}</h3>
+                  <p>{album.description || 'View album'}</p>
+                  <div className="album-preview">
+                    {previews[index]?.map((image) => (
+                      <img
+                        key={image.id}
+                        src={image.thumb_url || image.url}
+                        alt={image.title || 'Album preview'}
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                  <div className="button ghost">View more</div>
+                </a>
+              ))}
+              {albums.length === 0 && (
+                <div className="notice">No public albums yet. Create one from the admin dashboard.</div>
+              )}
+            </div>
+          </section>
           <HomeGalleryClient images={images} />
         </div>
       </main>
