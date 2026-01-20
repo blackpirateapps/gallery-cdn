@@ -29,10 +29,12 @@ This project is a Next.js gallery app with Turso + Cloudflare R2.
 - af7be76 Scaffold Next.js gallery with Turso + R2.
 
 ## Current features
-- Public gallery with masonry layout and lightbox (next/prev, details link, loading state).
+- Public gallery with masonry layout, lightbox (next/prev, details link, loading state), and featured section.
+- Public album listing on the homepage with preview grids and dedicated album pages.
 - Image detail pages by random `public_id`, with private/unlisted visibility handling.
-- Admin dashboard with modern upload panel, metadata editing, and share-link copy.
+- Admin dashboard with two‑column layout, modern upload panel, icon actions, and batch album assignment.
+- Album CRUD with editable URL ids and uniqueness enforcement.
 - Direct uploads to Cloudflare R2 using presigned URLs (full + thumbnail).
 - Client-side EXIF parsing, stripping from uploads, and stored in dedicated DB columns.
-- Auto DB initialization/migration on boot.
+- Auto DB initialization/migration at build time.
 - WhatsApp “Hire me” CTA and photographer-themed UI.
