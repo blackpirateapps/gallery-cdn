@@ -21,9 +21,9 @@ export default async function HomePage() {
   return (
     <>
       <nav className="nav">
-        <div className="logo">Sudip's Gallery</div>
+        <div className="logo">Sudip Mandal</div>
         <div className="nav-actions">
-          <a className="button ghost" href="https://wa.me/917908897908?text=Hi%20Sudip%2C%20I%27d%20like%20to%20hire%20you%20for%20a%20shoot.">Hire me</a>
+          <a className="button ghost" href="https://wa.me/917908897908?text=Hi%20Sudip%20Mandal%2C%20I%27d%20like%20to%20hire%20you%20for%20a%20shoot.">Hire me</a>
           <a className="button" href="/login">Admin</a>
         </div>
       </nav>
@@ -31,10 +31,10 @@ export default async function HomePage() {
         <div className="container">
           <section className="hero">
             <div className="hero-copy">
-              <h1>Sudip's Gallery</h1>
+              <h1>Sudip Mandal</h1>
               <p>Professional photography for portraits, events, and editorial stories. Clean visuals, honest light, and a modern gallery experience.</p>
               <div className="hero-cta">
-                <a className="button primary" href="https://wa.me/917908897908?text=Hi%20Sudip%2C%20I%27d%20like%20to%20hire%20you%20for%20a%20shoot.">Hire me on WhatsApp</a>
+                <a className="button primary" href="https://wa.me/917908897908?text=Hi%20Sudip%20Mandal%2C%20I%27d%20like%20to%20hire%20you%20for%20a%20shoot.">Hire me on WhatsApp</a>
                 <span className="badge">Available for bookings</span>
               </div>
               <div className="notice">
@@ -53,7 +53,7 @@ export default async function HomePage() {
                 )}
                 <div className="profile-meta">
                   <div className="badge">Photographer</div>
-                  <h3>Sudip Das</h3>
+                  <h3>Sudip Mandal</h3>
                   <p>Portraits, lifestyle, and editorial stories shot across India.</p>
                 </div>
               </div>

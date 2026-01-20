@@ -9,7 +9,7 @@ export default function LoginPage() {
   return (
     <>
       <nav className="nav">
-        <a className="logo" href="/">Sudip's Gallery</a>
+        <a className="logo" href="/">Sudip Mandal</a>
       </nav>
       <main>
         <div className="container">

@@ -20,7 +20,7 @@ export default async function AlbumPage({ params }: { params: { id: string } }) 
     return (
       <>
         <nav className="nav">
-          <a className="logo" href="/">Sudip's Gallery</a>
+          <a className="logo" href="/">Sudip Mandal</a>
           <Link className="button" href="/">Back to gallery</Link>
         </nav>
         <main>
@@ -41,7 +41,7 @@ export default async function AlbumPage({ params }: { params: { id: string } }) 
   return (
     <>
       <nav className="nav">
-        <a className="logo" href="/">Sudip's Gallery</a>
+        <a className="logo" href="/">Sudip Mandal</a>
         <Link className="button" href="/">Back to gallery</Link>
       </nav>
       <main>

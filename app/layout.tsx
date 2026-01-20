@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: "Sudip's Gallery",
+  title: "Sudip Mandal",
   description: "Professional photography portfolio powered by Turso and Cloudflare R2."
 };
 
