@@ -40,6 +40,14 @@ export default function AdminClient() {
       setDebugLog((prev) => [...prev, line]);
     };
 
+    const readBody = async (response: Response) => {
+      try {
+        return await response.text();
+      } catch {
+        return '';
+      }
+    };
+
     pushDebug(`Selected file: ${file.name} (${file.type || 'unknown'})`);
 
     const presignResponse = await fetch('/api/r2-presign', {
@@ -49,9 +57,16 @@ export default function AdminClient() {
     });
 
     if (!presignResponse.ok) {
-      const data = await presignResponse.json().catch(() => ({}));
+      const bodyText = await readBody(presignResponse);
+      let data: { error?: string } = {};
+      try {
+        data = bodyText ? JSON.parse(bodyText) : {};
+      } catch {
+        data = {};
+      }
       setStatus(data.error || 'Failed to get upload URL.');
       pushDebug(`Presign failed: ${presignResponse.status}`);
+      if (bodyText) pushDebug(`Presign body: ${bodyText}`);
       setUploading(false);
       return;
     }
@@ -66,8 +81,10 @@ export default function AdminClient() {
     });
 
     if (!uploadResponse.ok) {
+      const bodyText = await readBody(uploadResponse);
       setStatus('Upload to R2 failed.');
       pushDebug(`R2 upload failed: ${uploadResponse.status}`);
+      if (bodyText) pushDebug(`R2 body: ${bodyText}`);
       setUploading(false);
       return;
     }
@@ -81,9 +98,16 @@ export default function AdminClient() {
     });
 
     if (!recordResponse.ok) {
-      const data = await recordResponse.json().catch(() => ({}));
+      const bodyText = await readBody(recordResponse);
+      let data: { error?: string } = {};
+      try {
+        data = bodyText ? JSON.parse(bodyText) : {};
+      } catch {
+        data = {};
+      }
       setStatus(data.error || 'Failed to save metadata.');
       pushDebug(`DB record failed: ${recordResponse.status}`);
+      if (bodyText) pushDebug(`DB body: ${bodyText}`);
       setUploading(false);
       return;
     }
