@@ -16,11 +16,12 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null);
     const filename = body?.filename;
     const contentType = body?.contentType || 'application/octet-stream';
+    const variant = body?.variant === 'thumb' ? 'thumbs' : 'uploads';
     if (!filename || typeof filename !== 'string') {
       return NextResponse.json({ error: 'Missing filename' }, { status: 400 });
     }
 
-    const key = `${Date.now()}-${crypto.randomUUID()}-${filename}`;
+    const key = `${variant}/${Date.now()}-${crypto.randomUUID()}-${filename}`;
     const command = new PutObjectCommand({
       Bucket: getBucket(),
       Key: key,

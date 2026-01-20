@@ -10,6 +10,8 @@ async function ensureSchema() {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     key TEXT NOT NULL,
     url TEXT NOT NULL,
+    thumb_key TEXT,
+    thumb_url TEXT,
     title TEXT,
     description TEXT,
     tag TEXT,
@@ -20,7 +22,7 @@ async function ensureSchema() {
 
   const result = await db.execute('PRAGMA table_info(images)');
   const existing = new Set(result.rows.map((row) => String(row.name)));
-  const columns = ['title', 'description', 'tag', 'location', 'exif_json'];
+  const columns = ['thumb_key', 'thumb_url', 'title', 'description', 'tag', 'location', 'exif_json'];
   for (const column of columns) {
     if (!existing.has(column)) {
       await db.execute(`ALTER TABLE images ADD COLUMN ${column} TEXT`);
@@ -49,6 +51,8 @@ export type ImageRecord = {
   id: number;
   key: string;
   url: string;
+  thumb_key: string | null;
+  thumb_url: string | null;
   title: string | null;
   description: string | null;
   tag: string | null;
@@ -61,12 +65,14 @@ export async function listImages() {
   const db = getDb();
   await ensureSchema();
   const result = await db.execute(
-    'SELECT id, key, url, title, description, tag, location, exif_json, created_at FROM images ORDER BY created_at DESC'
+    'SELECT id, key, url, thumb_key, thumb_url, title, description, tag, location, exif_json, created_at FROM images ORDER BY created_at DESC'
   );
   return result.rows.map((row) => ({
     id: Number(row.id),
     key: String(row.key),
     url: String(row.url),
+    thumb_key: row.thumb_key ? String(row.thumb_key) : null,
+    thumb_url: row.thumb_url ? String(row.thumb_url) : null,
     title: row.title ? String(row.title) : null,
     description: row.description ? String(row.description) : null,
     tag: row.tag ? String(row.tag) : null,
@@ -79,6 +85,8 @@ export async function listImages() {
 export async function insertImage(options: {
   key: string;
   url: string;
+  thumbKey?: string;
+  thumbUrl?: string;
   title?: string;
   description?: string;
   tag?: string;
@@ -90,10 +98,12 @@ export async function insertImage(options: {
   const createdAt = Date.now();
   await db.execute({
     sql:
-      'INSERT INTO images (key, url, title, description, tag, location, exif_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO images (key, url, thumb_key, thumb_url, title, description, tag, location, exif_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     args: [
       options.key,
       options.url,
+      options.thumbKey ?? null,
+      options.thumbUrl ?? null,
       options.title ?? null,
       options.description ?? null,
       options.tag ?? null,
@@ -117,7 +127,8 @@ export async function getImageById(id: number) {
   const db = getDb();
   await ensureSchema();
   const result = await db.execute({
-    sql: 'SELECT id, key, url, title, description, tag, location, exif_json, created_at FROM images WHERE id = ?',
+    sql:
+      'SELECT id, key, url, thumb_key, thumb_url, title, description, tag, location, exif_json, created_at FROM images WHERE id = ?',
     args: [id]
   });
   const row = result.rows[0];
@@ -126,6 +137,8 @@ export async function getImageById(id: number) {
     id: Number(row.id),
     key: String(row.key),
     url: String(row.url),
+    thumb_key: row.thumb_key ? String(row.thumb_key) : null,
+    thumb_url: row.thumb_url ? String(row.thumb_url) : null,
     title: row.title ? String(row.title) : null,
     description: row.description ? String(row.description) : null,
     tag: row.tag ? String(row.tag) : null,

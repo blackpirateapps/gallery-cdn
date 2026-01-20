@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as exifr from 'exifr';
 
 type ImageRecord = {
   id: number;
   key: string;
   url: string;
+  thumb_url: string | null;
   title: string | null;
   description: string | null;
   tag: string | null;
@@ -27,6 +28,7 @@ export default function AdminClient() {
   const [tag, setTag] = useState('');
   const [location, setLocation] = useState('');
   const [exifText, setExifText] = useState('');
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   const hasFormData = useMemo(
     () => title || description || tag || location || exifText,
@@ -63,28 +65,43 @@ export default function AdminClient() {
     }
   };
 
-  const stripExif = async (file: File) => {
-    const imageBitmap = await createImageBitmap(file);
+  const encodeBitmap = async (bitmap: ImageBitmap, width: number, height: number, type: string) => {
     const canvas = document.createElement('canvas');
-    canvas.width = imageBitmap.width;
-    canvas.height = imageBitmap.height;
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error('Canvas not supported');
     }
-    ctx.drawImage(imageBitmap, 0, 0);
-    const targetType = file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg';
+    ctx.drawImage(bitmap, 0, 0, width, height);
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (result) => {
           if (result) resolve(result);
           else reject(new Error('Failed to encode image'));
         },
-        targetType,
-        0.92
+        type,
+        0.9
       );
     });
-    return new File([blob], file.name, { type: blob.type || targetType });
+    return blob;
+  };
+
+  const buildUploadFiles = async (file: File) => {
+    const bitmap = await createImageBitmap(file);
+    const targetType = file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg';
+    const fullBlob = await encodeBitmap(bitmap, bitmap.width, bitmap.height, targetType);
+
+    const maxSize = 520;
+    const ratio = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+    const thumbWidth = Math.round(bitmap.width * ratio);
+    const thumbHeight = Math.round(bitmap.height * ratio);
+    const thumbBlob = await encodeBitmap(bitmap, thumbWidth, thumbHeight, targetType);
+
+    return {
+      full: new File([fullBlob], file.name, { type: fullBlob.type || targetType }),
+      thumb: new File([thumbBlob], `thumb-${file.name}`, { type: thumbBlob.type || targetType })
+    };
   };
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -95,6 +112,9 @@ export default function AdminClient() {
     setStatus('');
     setDebugLog([]);
 
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
     const preview = URL.createObjectURL(file);
     setPreviewUrl(preview);
 
@@ -149,17 +169,20 @@ export default function AdminClient() {
     pushDebug(`Selected file: ${selectedFile.name} (${selectedFile.type || 'unknown'})`);
 
     let uploadFile = selectedFile;
+    let thumbFile: File | null = null;
     try {
-      uploadFile = await stripExif(selectedFile);
-      pushDebug('EXIF stripped before upload.');
+      const files = await buildUploadFiles(selectedFile);
+      uploadFile = files.full;
+      thumbFile = files.thumb;
+      pushDebug('EXIF stripped and thumbnail generated.');
     } catch (error) {
-      pushDebug('Failed to strip EXIF, uploading original file.');
+      pushDebug('Failed to process images, uploading original file.');
     }
 
     const presignResponse = await fetch('/api/r2-presign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: uploadFile.name, contentType: uploadFile.type })
+      body: JSON.stringify({ filename: uploadFile.name, contentType: uploadFile.type, variant: 'full' })
     });
 
     if (!presignResponse.ok) {
@@ -195,7 +218,46 @@ export default function AdminClient() {
       return;
     }
 
-    pushDebug('Uploaded directly to R2.');
+    pushDebug('Uploaded original to R2.');
+
+    let thumbKey: string | null = null;
+    let thumbUrl: string | null = null;
+    if (thumbFile) {
+      const thumbPresignResponse = await fetch('/api/r2-presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: thumbFile.name, contentType: thumbFile.type, variant: 'thumb' })
+      });
+
+      if (!thumbPresignResponse.ok) {
+        const bodyText = await readBody(thumbPresignResponse);
+        setStatus('Failed to get thumbnail upload URL.');
+        pushDebug(`Thumb presign failed: ${thumbPresignResponse.status}`);
+        if (bodyText) pushDebug(`Thumb presign body: ${bodyText}`);
+        setUploading(false);
+        return;
+      }
+
+      const thumbPresignData = await thumbPresignResponse.json();
+      const thumbUploadResponse = await fetch(thumbPresignData.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': thumbFile.type || 'application/octet-stream' },
+        body: thumbFile
+      });
+
+      if (!thumbUploadResponse.ok) {
+        const bodyText = await readBody(thumbUploadResponse);
+        setStatus('Thumbnail upload failed.');
+        pushDebug(`Thumb upload failed: ${thumbUploadResponse.status}`);
+        if (bodyText) pushDebug(`Thumb upload body: ${bodyText}`);
+        setUploading(false);
+        return;
+      }
+
+      thumbKey = thumbPresignData.key;
+      thumbUrl = thumbPresignData.publicUrl;
+      pushDebug('Uploaded thumbnail to R2.');
+    }
 
     let exifPayload: Record<string, unknown> | null = null;
     if (exifText) {
@@ -215,6 +277,8 @@ export default function AdminClient() {
       body: JSON.stringify({
         key: presignData.key,
         url: presignData.publicUrl,
+        thumbKey,
+        thumbUrl,
         title,
         description,
         tag,
@@ -246,6 +310,7 @@ export default function AdminClient() {
     setTag('');
     setLocation('');
     setExifText('');
+    formRef.current?.reset();
     await loadImages();
     setUploading(false);
   }
@@ -283,7 +348,7 @@ export default function AdminClient() {
       <section className="stack">
         <div className="panel">
           <h2 style={{ marginTop: 0 }}>Upload new image</h2>
-          <form className="stack" onSubmit={handleUpload}>
+          <form ref={formRef} className="stack" onSubmit={handleUpload}>
             <input className="input" type="file" name="file" accept="image/*" required onChange={handleFileChange} />
             {previewUrl ? (
               <img src={previewUrl} alt="Preview" style={{ width: '100%', borderRadius: '12px' }} />
@@ -354,7 +419,7 @@ export default function AdminClient() {
               {images.map((image) => (
                 <tr key={image.id}>
                   <td>
-                    <img src={image.url} alt="" style={{ width: '90px', borderRadius: '10px' }} />
+                    <img src={image.thumb_url || image.url} alt="" style={{ width: '90px', borderRadius: '10px' }} />
                   </td>
                   <td>
                     <div>{image.title || 'Untitled'}</div>

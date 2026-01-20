@@ -15,6 +15,8 @@ export async function POST(request: Request) {
   const tag = body?.tag;
   const location = body?.location;
   const exif = body?.exif;
+  const thumbKey = body?.thumbKey;
+  const thumbUrl = body?.thumbUrl;
 
   if (!key || !url) {
     return NextResponse.json({ error: 'Missing key or url' }, { status: 400 });
@@ -23,6 +25,8 @@ export async function POST(request: Request) {
   await insertImage({
     key: String(key),
     url: String(url),
+    thumbKey: thumbKey ? String(thumbKey) : undefined,
+    thumbUrl: thumbUrl ? String(thumbUrl) : undefined,
     title: title ? String(title) : undefined,
     description: description ? String(description) : undefined,
     tag: tag ? String(tag) : undefined,

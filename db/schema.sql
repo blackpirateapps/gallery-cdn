@@ -2,6 +2,8 @@ CREATE TABLE IF NOT EXISTS images (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   key TEXT NOT NULL,
   url TEXT NOT NULL,
+  thumb_key TEXT,
+  thumb_url TEXT,
   title TEXT,
   description TEXT,
   tag TEXT,

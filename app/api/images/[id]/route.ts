@@ -19,6 +19,9 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
   }
 
   await removeImage(image.key);
+  if (image.thumb_key) {
+    await removeImage(image.thumb_key);
+  }
   await deleteImage(id);
 
   return NextResponse.json({ ok: true });

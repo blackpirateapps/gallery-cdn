@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { listImages } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -24,13 +25,13 @@ export default async function HomePage() {
           </section>
           <section className="grid">
             {images.map((image) => (
-              <div className="card" key={image.id}>
-                <img src={image.url} alt={`Gallery item ${image.id}`} loading="lazy" />
+              <Link className="card" key={image.id} href={`/images/${image.id}`}>
+                <img src={image.thumb_url || image.url} alt={`Gallery item ${image.id}`} loading="lazy" />
                 <div className="meta">
                   {image.title ? <strong>{image.title}</strong> : null}
                   <div>{image.description || new Date(image.created_at).toLocaleDateString()}</div>
                 </div>
-              </div>
+              </Link>
             ))}
             {images.length === 0 && (
               <div className="notice">No images yet. Use the admin dashboard to upload the first set.</div>
