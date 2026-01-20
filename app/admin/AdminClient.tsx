@@ -40,7 +40,7 @@ export default function AdminClient() {
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
   const [featured, setFeatured] = useState(false);
   const [albumId, setAlbumId] = useState<number | ''>('');
-  const formRef = useRef<HTMLFormElement | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');

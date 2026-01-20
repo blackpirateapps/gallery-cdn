@@ -4,7 +4,7 @@ import type { ChangeEvent, FormEvent, RefObject } from 'react';
 import type { AlbumRecord } from '../types';
 
 type UploadPanelProps = {
-  formRef: RefObject<HTMLFormElement | null>;
+  formRef: RefObject<HTMLFormElement>;
   previewUrl: string;
   selectedFile: File | null;
   hasFormData: boolean;
