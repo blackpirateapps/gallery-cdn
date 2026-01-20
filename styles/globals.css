@@ -116,20 +116,19 @@ main {
   gap: 18px;
 }
 
-.justified {
+.masonry {
   margin-top: 36px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
+  column-count: 3;
+  column-gap: 18px;
 }
 
-.justified-item {
-  flex: 1 1 240px;
-  min-width: 220px;
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 18px;
 }
 
-.justified .card img {
-  height: 200px;
+.masonry .card img {
+  height: auto;
 }
 
 .card {
@@ -568,8 +567,8 @@ select.input {
     grid-template-columns: 1fr;
   }
 
-  .justified {
-    gap: 12px;
+  .masonry {
+    column-count: 2;
   }
 
   .admin-hero {
@@ -587,5 +586,11 @@ select.input {
 
   .upload-inline {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .masonry {
+    column-count: 1;
   }
 }
