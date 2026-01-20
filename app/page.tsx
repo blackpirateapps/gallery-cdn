@@ -32,39 +32,81 @@ export default async function HomePage() {
         <main>
           {/* Hero: Editorial Layout */}
           <section className="hero">
-            <div className="hero-content">
-              <h1>Visual storytelling<br/> with honest light.</h1>
+            <div className="hero-copy">
+              <span className="eyebrow">Portraits / Editorial / Weddings</span>
+              <h1>Light-forward frames built for timeless stories.</h1>
               <p>
-                Professional photography by Sudip Mandal. Capturing portraits, events, and editorial stories across India with a focus on clean aesthetics and raw emotion.
+                Professional photography by Sudip Mandal. Clean compositions, unforced poses, and tactile edits that keep the day&rsquo;s energy intact across India and beyond.
               </p>
+              <div className="hero-tags">
+                <span className="chip">Natural light</span>
+                <span className="chip">Documentary calm</span>
+                <span className="chip">Print-ready exports</span>
+              </div>
               <div className="hero-cta">
                 <a className="button primary" href="#gallery">View Portfolio</a>
                 <a className="button ghost" href="https://wa.me/917908897908">Book a Session &rarr;</a>
               </div>
-            </div>
-            <div className="hero-image-frame">
-              {profileImage?.url ? (
-                <img src={profileImage.url} alt="Sudip Mandal" />
-              ) : (
-                <div style={{width: '100%', height: '100%', background: '#f4f4f4', display: 'grid', placeItems: 'center', color: '#888'}}>
-                  Profile Image
+              <div className="hero-meta">
+                <div className="meta-card">
+                  <span className="meta-label">Base</span>
+                  <strong>Kolkata / Across India</strong>
                 </div>
-              )}
+                <div className="meta-card">
+                  <span className="meta-label">Approach</span>
+                  <strong>Editorial, quiet, human</strong>
+                </div>
+              </div>
+            </div>
+            <div className="hero-visual">
+              <div className="hero-frame">
+                <div className="hero-portrait">
+                  {profileImage?.url ? (
+                    <img src={profileImage.url} alt="Sudip Mandal" />
+                  ) : (
+                    <div className="hero-placeholder">
+                      <span>Portrait coming soon</span>
+                    </div>
+                  )}
+                </div>
+                <div className="hero-caption">
+                  <div>
+                    <p>Sudip Mandal</p>
+                    <span>Available worldwide</span>
+                  </div>
+                  <span className="chip subtle">Light-first edits</span>
+                </div>
+              </div>
+              <div className="hero-floating">
+                <span className="pulse-dot" aria-hidden="true" />
+                <div>
+                  <p>Featured sets</p>
+                  <strong>Raw, tactile tones</strong>
+                </div>
+              </div>
             </div>
           </section>
 
           {/* Featured: Offset Grid */}
           {featured.length > 0 && (
             <section className="featured">
-              <div className="section-header">
-                <h2>Selected Works</h2>
+              <div className="section-header featured-header">
+                <div>
+                  <span className="eyebrow">Signature sets</span>
+                  <h2>Featured frames</h2>
+                </div>
+                <p className="section-lede">A rotating set of images with honest light and restrained color work.</p>
               </div>
-              <div className="featured-grid">
-                {featured.map((image) => (
-                  <a className="featured-item" key={image.id} href={`/images/${image.public_id}`}>
+              <div className="featured-mosaic">
+                {featured.map((image, index) => (
+                  <a className="featured-tile" key={image.id} href={`/images/${image.public_id}`}>
                     <img src={image.url} alt={image.title || 'Featured'} loading="lazy" />
-                    <div className="featured-overlay">
-                      <h3>{image.title}</h3>
+                    <div className="featured-tile-overlay">
+                      <div>
+                        <span className="meta-label">Set {String(index + 1).padStart(2, '0')}</span>
+                        <p>{image.title || 'Untitled frame'}</p>
+                      </div>
+                      <span className="chip subtle">View</span>
                     </div>
                   </a>
                 ))}
