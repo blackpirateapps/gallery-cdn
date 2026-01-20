@@ -322,10 +322,39 @@ main {
   align-items: center;
 }
 
-.admin-metrics {
-  display: grid;
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-session {
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
-  text-align: right;
+}
+
+.admin-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(16, 16, 16, 0.6);
+}
+
+.metric-card svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
 }
 
 .album-grid {
@@ -377,6 +406,14 @@ main {
   margin-top: 18px;
   display: grid;
   gap: 12px;
+}
+
+.album-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .album-row {
@@ -463,7 +500,7 @@ main {
 
 .admin-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
 }
 
@@ -535,6 +572,34 @@ select.input {
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+.action-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(16, 16, 16, 0.6);
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-button.danger {
+  border-color: rgba(214, 83, 83, 0.5);
+  color: #f1b0b0;
 }
 
 .table th,
@@ -652,13 +717,13 @@ select.input {
     column-count: 2;
   }
 
-  .admin-hero {
+  .admin-header {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .admin-metrics {
-    text-align: left;
+  .admin-metrics-row {
+    grid-template-columns: 1fr;
   }
 
   .table-tools {

@@ -3,6 +3,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import imageCompression from 'browser-image-compression';
 import * as exifr from 'exifr';
+import {
+  Clipboard,
+  Filter,
+  LogOut,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+  GalleryHorizontalEnd,
+  Lock
+} from 'lucide-react';
 
 type ImageRecord = {
   id: number;
@@ -87,6 +98,7 @@ export default function AdminClient() {
   const [editingAlbumId, setEditingAlbumId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [batchAlbumId, setBatchAlbumId] = useState<number | ''>('');
+  const [showAlbumForm, setShowAlbumForm] = useState(false);
 
   const totalCount = images.length;
   const privateCount = images.filter((image) => image.visibility === 'private').length;
@@ -633,40 +645,6 @@ export default function AdminClient() {
   return (
     <div className="admin-layout">
       <aside className="sidebar stack">
-        <div>
-          <div className="badge">Session</div>
-          <p style={{ margin: '8px 0 0' }}>Logged in as admin.</p>
-        </div>
-        <button className="button" onClick={handleLogout}>
-          Sign out
-        </button>
-        <div className="notice">Keep uploads lightweight for faster delivery on the public gallery.</div>
-        <div className="notice">R2 must allow PUT from your domain (CORS) for direct uploads.</div>
-      </aside>
-
-      <section className="stack">
-        <div className="panel admin-hero">
-          <div>
-            <h2 style={{ marginTop: 0 }}>Studio console</h2>
-            <p className="muted">
-              Curate your portfolio, manage visibility, and share private links with clients.
-            </p>
-          </div>
-          <div className="admin-metrics">
-            <div>
-              <div className="badge">Total</div>
-              <div>{totalCount}</div>
-            </div>
-            <div>
-              <div className="badge">Unlisted</div>
-              <div>{unlistedCount}</div>
-            </div>
-            <div>
-              <div className="badge">Private</div>
-              <div>{privateCount}</div>
-            </div>
-          </div>
-        </div>
         <div className="panel upload-panel">
           <div className="upload-header">
             <div>
@@ -823,6 +801,50 @@ export default function AdminClient() {
             <div className="notice">Select an image to preview, auto-fill EXIF data, and set visibility.</div>
           ) : null}
         </div>
+        <div className="notice">Keep uploads lightweight for faster delivery on the public gallery.</div>
+        <div className="notice">R2 must allow PUT from your domain (CORS) for direct uploads.</div>
+      </aside>
+
+      <section className="stack">
+        <div className="panel admin-header">
+          <div>
+            <h2 style={{ marginTop: 0 }}>Studio console</h2>
+            <p className="muted">
+              Curate your portfolio, manage visibility, and share private links with clients.
+            </p>
+          </div>
+          <div className="admin-session">
+            <span className="badge">Admin session</span>
+            <button className="button ghost" type="button" onClick={handleLogout}>
+              <LogOut aria-hidden="true" />
+              Sign out
+            </button>
+          </div>
+        </div>
+
+        <div className="admin-metrics-row">
+          <div className="metric-card">
+            <GalleryHorizontalEnd aria-hidden="true" />
+            <div>
+              <div className="badge">Total</div>
+              <div>{totalCount}</div>
+            </div>
+          </div>
+          <div className="metric-card">
+            <Upload aria-hidden="true" />
+            <div>
+              <div className="badge">Unlisted</div>
+              <div>{unlistedCount}</div>
+            </div>
+          </div>
+          <div className="metric-card">
+            <Lock aria-hidden="true" />
+            <div>
+              <div className="badge">Private</div>
+              <div>{privateCount}</div>
+            </div>
+          </div>
+        </div>
 
         <div className="panel">
           <div className="table-header">
@@ -842,6 +864,13 @@ export default function AdminClient() {
               </select>
               <button className="button ghost" type="button" onClick={assignBatch} disabled={!selectedIds.length}>
                 Add
+              </button>
+              <button className="button ghost" type="button">
+                <Filter aria-hidden="true" />
+                Filter
+              </button>
+              <button className="button ghost" type="button">
+                Sort
               </button>
             </div>
           </div>
@@ -881,15 +910,15 @@ export default function AdminClient() {
                     <div className="badge">{image.visibility || 'public'}</div>
                   </td>
                   <td>
-                    <div className="stack" style={{ gap: '8px' }}>
-                      <button className="button" type="button" onClick={() => startEdit(image)}>
-                        Edit
+                    <div className="action-row">
+                      <button className="icon-button" type="button" onClick={() => startEdit(image)}>
+                        <Pencil aria-hidden="true" />
                       </button>
-                      <button className="button" type="button" onClick={() => handleCopyLink(image.public_id)}>
-                        Copy link
+                      <button className="icon-button" type="button" onClick={() => handleCopyLink(image.public_id)}>
+                        <Clipboard aria-hidden="true" />
                       </button>
-                      <button className="button" type="button" onClick={() => handleDelete(image.id)}>
-                        Delete
+                      <button className="icon-button danger" type="button" onClick={() => handleDelete(image.id)}>
+                        <Trash2 aria-hidden="true" />
                       </button>
                     </div>
                   </td>
@@ -901,52 +930,60 @@ export default function AdminClient() {
         </div>
 
         <div className="panel">
-          <h2 style={{ marginTop: 0 }}>{editingAlbumId ? 'Edit album' : 'Create album'}</h2>
-          <form className="stack" onSubmit={handleAlbumSubmit}>
-            <input
-              className="input"
-              type="text"
-              placeholder="Album title"
-              value={albumTitle}
-              onChange={(event) => setAlbumTitle(event.target.value)}
-              required
-            />
-            <input
-              className="input"
-              type="text"
-              placeholder="Album URL id (optional)"
-              value={albumPublicId}
-              onChange={(event) => setAlbumPublicId(sanitizePublicId(event.target.value))}
-            />
-            <textarea
-              className="input"
-              placeholder="Album description"
-              rows={3}
-              value={albumDescription}
-              onChange={(event) => setAlbumDescription(event.target.value)}
-            />
-            <div className="upload-inline">
+          <div className="album-header">
+            <h2 style={{ marginTop: 0 }}>Albums</h2>
+            <button className="button ghost" type="button" onClick={() => setShowAlbumForm((prev) => !prev)}>
+              <Plus aria-hidden="true" />
+              {showAlbumForm ? 'Close' : 'Create an album'}
+            </button>
+          </div>
+          {showAlbumForm ? (
+            <form className="stack" onSubmit={handleAlbumSubmit}>
               <input
                 className="input"
                 type="text"
-                placeholder="Tag"
-                value={albumTag}
-                onChange={(event) => setAlbumTag(event.target.value)}
+                placeholder="Album title"
+                value={albumTitle}
+                onChange={(event) => setAlbumTitle(event.target.value)}
+                required
               />
-              <select
+              <input
                 className="input"
-                value={albumVisibility}
-                onChange={(event) => setAlbumVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
-              >
-                <option value="public">Public</option>
-                <option value="unlisted">Unlisted</option>
-                <option value="private">Private</option>
-              </select>
-            </div>
-            <button className="button primary" type="submit">
-              {editingAlbumId ? 'Save album' : 'Create album'}
-            </button>
-          </form>
+                type="text"
+                placeholder="Album URL id (optional)"
+                value={albumPublicId}
+                onChange={(event) => setAlbumPublicId(sanitizePublicId(event.target.value))}
+              />
+              <textarea
+                className="input"
+                placeholder="Album description"
+                rows={3}
+                value={albumDescription}
+                onChange={(event) => setAlbumDescription(event.target.value)}
+              />
+              <div className="upload-inline">
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Tag"
+                  value={albumTag}
+                  onChange={(event) => setAlbumTag(event.target.value)}
+                />
+                <select
+                  className="input"
+                  value={albumVisibility}
+                  onChange={(event) => setAlbumVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
+                >
+                  <option value="public">Public</option>
+                  <option value="unlisted">Unlisted</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+              <button className="button primary" type="submit">
+                {editingAlbumId ? 'Save album' : 'Create album'}
+              </button>
+            </form>
+          ) : null}
           <div className="album-list">
             {albums.map((album) => (
               <div key={album.id} className="album-row">
@@ -955,12 +992,12 @@ export default function AdminClient() {
                   <div>{album.title}</div>
                   <div className="muted">{album.description || 'No description'}</div>
                 </div>
-                <div className="stack" style={{ gap: '8px' }}>
-                  <button className="button ghost" type="button" onClick={() => startAlbumEdit(album)}>
-                    Edit
+                <div className="action-row">
+                  <button className="icon-button" type="button" onClick={() => startAlbumEdit(album)}>
+                    <Pencil aria-hidden="true" />
                   </button>
-                  <button className="button" type="button" onClick={() => deleteAlbum(album.id)}>
-                    Delete
+                  <button className="icon-button danger" type="button" onClick={() => deleteAlbum(album.id)}>
+                    <Trash2 aria-hidden="true" />
                   </button>
                 </div>
               </div>
