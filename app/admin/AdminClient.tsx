@@ -74,22 +74,24 @@ export default function AdminClient() {
 
   const hasFormData = useMemo(
     () =>
-      title ||
-      description ||
-      tag ||
-      location ||
-      exifMake ||
-      exifModel ||
-      exifLens ||
-      exifFNumber ||
-      exifExposure ||
-      exifIso ||
-      exifFocal ||
-      exifTakenAt ||
-      exifLat ||
-      exifLng ||
-      featured ||
-      visibility !== 'public',
+      Boolean(
+        title ||
+          description ||
+          tag ||
+          location ||
+          exifMake ||
+          exifModel ||
+          exifLens ||
+          exifFNumber ||
+          exifExposure ||
+          exifIso ||
+          exifFocal ||
+          exifTakenAt ||
+          exifLat ||
+          exifLng ||
+          featured ||
+          visibility !== 'public'
+      ),
     [
       title,
       description,
