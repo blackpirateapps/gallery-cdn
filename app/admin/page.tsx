@@ -12,7 +12,7 @@ export default function AdminPage() {
   return (
     <>
       <nav className="nav">
-        <a className="logo" href="/">Gallery CDN</a>
+        <a className="logo" href="/">Sudip's Gallery</a>
         <span className="badge">Admin</span>
       </nav>
       <main>

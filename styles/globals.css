@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #f5f2ee;
-  --ink: #0f0f0f;
-  --muted: #6b6660;
-  --accent: #1f6feb;
-  --card: #ffffff;
-  --border: #e2dcd4;
+  --bg: #111111;
+  --ink: #f6f2eb;
+  --muted: #b7b2a8;
+  --accent: #d6a96a;
+  --card: #1c1c1c;
+  --border: #2d2a26;
 }
 
 * {
@@ -17,8 +17,8 @@ body {
   margin: 0;
   font-family: 'Space Grotesk', system-ui, sans-serif;
   color: var(--ink);
-  background: radial-gradient(1200px 500px at 20% -10%, #fff9f2, transparent),
-    linear-gradient(180deg, #f8f4ef 0%, #f0ece6 100%);
+  background: radial-gradient(1200px 500px at 20% -10%, rgba(214, 169, 106, 0.25), transparent),
+    linear-gradient(180deg, #141311 0%, #0f0e0d 100%);
   min-height: 100vh;
 }
 
@@ -43,6 +43,12 @@ main {
   padding: 20px 20px 0;
 }
 
+.nav-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .logo {
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -51,12 +57,24 @@ main {
 }
 
 .button {
-  border: 1px solid var(--ink);
+  border: 1px solid var(--accent);
   padding: 10px 16px;
   background: transparent;
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
+  color: var(--ink);
+}
+
+.button.primary {
+  background: var(--accent);
+  color: #15110e;
+  border-color: var(--accent);
+}
+
+.button.ghost {
+  border-color: transparent;
+  color: var(--ink);
 }
 
 .hero {
@@ -77,6 +95,14 @@ main {
   margin: 0;
   color: var(--muted);
   font-size: 16px;
+}
+
+.hero-cta {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .grid {
@@ -142,7 +168,7 @@ main {
 }
 
 .detail-exif pre {
-  background: #f8f4ef;
+  background: #151310;
   border-radius: 12px;
   padding: 12px;
   overflow: auto;

@@ -9,14 +9,14 @@ export default function LoginPage() {
   return (
     <>
       <nav className="nav">
-        <a className="logo" href="/">Gallery CDN</a>
+        <a className="logo" href="/">Sudip's Gallery</a>
       </nav>
       <main>
         <div className="container">
           <section className="hero">
             <div>
-              <h1>Admin access.</h1>
-              <p>Use the master password to manage the gallery.</p>
+              <h1>Studio access.</h1>
+              <p>Enter the master password to manage the portfolio.</p>
             </div>
           </section>
           <div style={{ marginTop: '24px', maxWidth: '420px' }}>
