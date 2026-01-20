@@ -67,19 +67,37 @@ export default function HomeGalleryClient({ images }: { images: ImageRecord[] })
         <div className="lightbox" role="dialog" aria-modal="true">
           <div className="lightbox-backdrop" onClick={close} />
           <div className="lightbox-card">
+            <button className="lightbox-nav prev" type="button" onClick={prev} aria-label="Previous image">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M15 18l-6-6 6-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
             <img className="lightbox-image" src={activeImage.url} alt={activeImage.title || 'Gallery image'} />
+            <button className="lightbox-nav next" type="button" onClick={next} aria-label="Next image">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M9 18l6-6-6-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
             <div className="lightbox-meta">
               <div>
                 <h3>{activeImage.title || 'Untitled'}</h3>
                 <p>{activeImage.description || 'No description provided.'}</p>
               </div>
               <div className="lightbox-actions">
-                <button className="button ghost" type="button" onClick={prev}>
-                  Previous
-                </button>
-                <button className="button ghost" type="button" onClick={next}>
-                  Next
-                </button>
                 <a className="button primary" href={`/images/${activeImage.public_id}`}>
                   View details
                 </a>
