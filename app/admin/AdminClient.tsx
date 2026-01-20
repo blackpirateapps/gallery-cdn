@@ -3,57 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import imageCompression from 'browser-image-compression';
 import * as exifr from 'exifr';
-import {
-  Clipboard,
-  Filter,
-  LogOut,
-  Pencil,
-  Plus,
-  Trash2,
-  Upload,
-  GalleryHorizontalEnd,
-  Lock
-} from 'lucide-react';
-
-type ImageRecord = {
-  id: number;
-  key: string;
-  url: string;
-  public_id: string;
-  thumb_url: string | null;
-  title: string | null;
-  description: string | null;
-  tag: string | null;
-  location: string | null;
-  exif_make: string | null;
-  exif_model: string | null;
-  exif_lens: string | null;
-  exif_fnumber: string | null;
-  exif_exposure: string | null;
-  exif_iso: string | null;
-  exif_focal: string | null;
-  exif_taken_at: string | null;
-  exif_lat: string | null;
-  exif_lng: string | null;
-  featured: number | null;
-  visibility: string | null;
-  created_at: number;
-};
-
-type AlbumRecord = {
-  id: number;
-  public_id: string;
-  title: string;
-  description: string | null;
-  tag: string | null;
-  visibility: string | null;
-  created_at: number;
-};
-
-type ProfileImage = {
-  key: string;
-  url: string;
-};
+import { LogOut } from 'lucide-react';
+import type { AlbumRecord, ImageRecord, ProfileImage } from './types';
+import UploadPanel from './components/UploadPanel';
+import ProfilePanel from './components/ProfilePanel';
+import MetricsRow from './components/MetricsRow';
+import GalleryTable from './components/GalleryTable';
+import AlbumPanel from './components/AlbumPanel';
+import EditImagePanel from './components/EditImagePanel';
 
 export default function AdminClient() {
   const [images, setImages] = useState<ImageRecord[]>([]);
@@ -742,198 +699,56 @@ export default function AdminClient() {
   return (
     <div className="admin-layout">
       <aside className="sidebar stack">
-        <div className="panel upload-panel">
-          <div className="upload-header">
-            <div>
-              <h2 style={{ marginTop: 0 }}>Upload new image</h2>
-              <p className="muted">Drag in a shot, add metadata, then publish or keep it private.</p>
-            </div>
-            <div className="badge">{visibility.toUpperCase()}</div>
-          </div>
-          <form ref={formRef} className="upload-grid" onSubmit={handleUpload}>
-            <div className="upload-preview">
-              {previewUrl ? (
-                <img src={previewUrl} alt="Preview" />
-              ) : (
-                <div className="upload-placeholder">
-                  <div className="badge">Preview</div>
-                  <p>Drop a photo to see the preview here.</p>
-                </div>
-              )}
-              <input className="input" type="file" name="file" accept="image/*" required onChange={handleFileChange} />
-            </div>
-            <div className="upload-fields">
-              <input
-                className="input"
-                type="text"
-                placeholder="Title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                required
-              />
-              <textarea
-                className="input"
-                placeholder="Description"
-                rows={3}
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-              <div className="upload-inline">
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Tag"
-                  value={tag}
-                  onChange={(event) => setTag(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Location"
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                />
-              </div>
-              <div className="upload-exif">
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Camera make"
-                  value={exifMake}
-                  onChange={(event) => setExifMake(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Camera model"
-                  value={exifModel}
-                  onChange={(event) => setExifModel(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Lens"
-                  value={exifLens}
-                  onChange={(event) => setExifLens(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="F-number"
-                  value={exifFNumber}
-                  onChange={(event) => setExifFNumber(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Exposure"
-                  value={exifExposure}
-                  onChange={(event) => setExifExposure(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="ISO"
-                  value={exifIso}
-                  onChange={(event) => setExifIso(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Focal length"
-                  value={exifFocal}
-                  onChange={(event) => setExifFocal(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Taken at"
-                  value={exifTakenAt}
-                  onChange={(event) => setExifTakenAt(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Latitude"
-                  value={exifLat}
-                  onChange={(event) => setExifLat(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Longitude"
-                  value={exifLng}
-                  onChange={(event) => setExifLng(event.target.value)}
-                />
-              </div>
-              <div className="upload-inline">
-                <select
-                  className="input"
-                  value={visibility}
-                  onChange={(event) => setVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
-                >
-                  <option value="public">Public</option>
-                  <option value="unlisted">Unlisted</option>
-                  <option value="private">Private</option>
-                </select>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={featured}
-                    onChange={(event) => setFeatured(event.target.checked)}
-                  />
-                  Featured
-                </label>
-              </div>
-              <button className="button primary" type="submit" disabled={uploading}>
-                {uploading ? 'Uploading...' : 'Upload image'}
-              </button>
-              <select
-                className="input"
-                value={albumId}
-                onChange={(event) => setAlbumId(event.target.value ? Number(event.target.value) : '')}
-              >
-                <option value="">No album</option>
-                {albums.map((album) => (
-                  <option key={album.id} value={album.id}>
-                    {album.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </form>
-          {!selectedFile && !hasFormData ? (
-            <div className="notice">Select an image to preview, auto-fill EXIF data, and set visibility.</div>
-          ) : null}
-        </div>
-        <div className="panel profile-panel">
-          <div className="upload-header">
-            <div>
-              <h2 style={{ marginTop: 0 }}>Photographer image</h2>
-              <p className="muted">Upload a profile photo for the homepage.</p>
-            </div>
-            <div className="badge">PROFILE</div>
-          </div>
-          <div className="profile-preview">
-            {profileImage?.url ? (
-              <img src={profileImage.url} alt="Photographer profile" />
-            ) : (
-              <div className="upload-placeholder">
-                <div className="badge">Profile</div>
-                <p>No profile image yet.</p>
-              </div>
-            )}
-            <input
-              className="input"
-              type="file"
-              name="profile"
-              accept="image/*"
-              onChange={handleProfileUpload}
-              disabled={profileUploading}
-            />
-          </div>
-          {profileStatus ? <div className="notice">{profileStatus}</div> : null}
-        </div>
+        <UploadPanel
+          formRef={formRef}
+          previewUrl={previewUrl}
+          selectedFile={selectedFile}
+          hasFormData={hasFormData}
+          uploading={uploading}
+          visibility={visibility}
+          featured={featured}
+          title={title}
+          description={description}
+          tag={tag}
+          location={location}
+          exifMake={exifMake}
+          exifModel={exifModel}
+          exifLens={exifLens}
+          exifFNumber={exifFNumber}
+          exifExposure={exifExposure}
+          exifIso={exifIso}
+          exifFocal={exifFocal}
+          exifTakenAt={exifTakenAt}
+          exifLat={exifLat}
+          exifLng={exifLng}
+          albumId={albumId}
+          albums={albums}
+          onFileChange={handleFileChange}
+          onSubmit={handleUpload}
+          onTitleChange={(event) => setTitle(event.target.value)}
+          onDescriptionChange={(event) => setDescription(event.target.value)}
+          onTagChange={(event) => setTag(event.target.value)}
+          onLocationChange={(event) => setLocation(event.target.value)}
+          onExifMakeChange={(event) => setExifMake(event.target.value)}
+          onExifModelChange={(event) => setExifModel(event.target.value)}
+          onExifLensChange={(event) => setExifLens(event.target.value)}
+          onExifFNumberChange={(event) => setExifFNumber(event.target.value)}
+          onExifExposureChange={(event) => setExifExposure(event.target.value)}
+          onExifIsoChange={(event) => setExifIso(event.target.value)}
+          onExifFocalChange={(event) => setExifFocal(event.target.value)}
+          onExifTakenAtChange={(event) => setExifTakenAt(event.target.value)}
+          onExifLatChange={(event) => setExifLat(event.target.value)}
+          onExifLngChange={(event) => setExifLng(event.target.value)}
+          onVisibilityChange={(event) => setVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
+          onFeaturedChange={(event) => setFeatured(event.target.checked)}
+          onAlbumChange={(event) => setAlbumId(event.target.value ? Number(event.target.value) : '')}
+        />
+        <ProfilePanel
+          profileImage={profileImage}
+          profileUploading={profileUploading}
+          profileStatus={profileStatus}
+          onProfileUpload={handleProfileUpload}
+        />
         <div className="notice">Keep uploads lightweight for faster delivery on the public gallery.</div>
         <div className="notice">R2 must allow PUT from your domain (CORS) for direct uploads.</div>
       </aside>
@@ -955,322 +770,80 @@ export default function AdminClient() {
           </div>
         </div>
 
-        <div className="admin-metrics-row">
-          <div className="metric-card">
-            <GalleryHorizontalEnd aria-hidden="true" />
-            <div>
-              <div className="badge">Total</div>
-              <div>{totalCount}</div>
-            </div>
-          </div>
-          <div className="metric-card">
-            <Upload aria-hidden="true" />
-            <div>
-              <div className="badge">Unlisted</div>
-              <div>{unlistedCount}</div>
-            </div>
-          </div>
-          <div className="metric-card">
-            <Lock aria-hidden="true" />
-            <div>
-              <div className="badge">Private</div>
-              <div>{privateCount}</div>
-            </div>
-          </div>
-        </div>
+        <MetricsRow totalCount={totalCount} unlistedCount={unlistedCount} privateCount={privateCount} />
 
-        <div className="panel">
-          <div className="table-header">
-            <h2 style={{ marginTop: 0 }}>Gallery items</h2>
-            <div className="table-tools">
-              <select
-                className="input"
-                value={batchAlbumId}
-                onChange={(event) => setBatchAlbumId(event.target.value ? Number(event.target.value) : '')}
-              >
-                <option value="">Add selected to album</option>
-                {albums.map((album) => (
-                  <option key={album.id} value={album.id}>
-                    {album.title}
-                  </option>
-                ))}
-              </select>
-              <button className="button ghost" type="button" onClick={assignBatch} disabled={!selectedIds.length}>
-                Add
-              </button>
-              <button className="button ghost" type="button">
-                <Filter aria-hidden="true" />
-                Filter
-              </button>
-              <button className="button ghost" type="button">
-                Sort
-              </button>
-            </div>
-          </div>
-          {status ? <div className="notice">{status}</div> : null}
-          {debugLog.length ? (
-            <div className="notice">
-              <strong>Debug</strong>
-              <div>{debugLog.join(' | ')}</div>
-            </div>
-          ) : null}
-          <table className="table" style={{ marginTop: '12px' }}>
-            <thead>
-              <tr>
-                <th />
-                <th>Preview</th>
-                <th>Details</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {images.map((image) => (
-                <tr key={image.id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(image.id)}
-                      onChange={() => toggleSelect(image.id)}
-                    />
-                  </td>
-                  <td>
-                    <img src={image.thumb_url || image.url} alt="" style={{ width: '90px', borderRadius: '10px' }} />
-                  </td>
-                  <td>
-                    <div>{image.title || 'Untitled'}</div>
-                    <div className="badge">{image.tag || 'No tag'}</div>
-                    <div>{image.location || new Date(image.created_at).toLocaleString()}</div>
-                    <div className="badge">{image.visibility || 'public'}</div>
-                    {image.featured ? <div className="badge">Featured</div> : null}
-                  </td>
-                  <td>
-                    <div className="action-row">
-                      <button className="icon-button" type="button" onClick={() => startEdit(image)}>
-                        <Pencil aria-hidden="true" />
-                      </button>
-                      <button className="icon-button" type="button" onClick={() => handleCopyLink(image.public_id)}>
-                        <Clipboard aria-hidden="true" />
-                      </button>
-                      <button className="icon-button danger" type="button" onClick={() => handleDelete(image.id)}>
-                        <Trash2 aria-hidden="true" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {images.length === 0 ? <div className="notice">No uploads yet.</div> : null}
-        </div>
+        <GalleryTable
+          status={status}
+          debugLog={debugLog}
+          images={images}
+          albums={albums}
+          selectedIds={selectedIds}
+          batchAlbumId={batchAlbumId}
+          onBatchAlbumChange={(event) => setBatchAlbumId(event.target.value ? Number(event.target.value) : '')}
+          onAssignBatch={assignBatch}
+          onToggleSelect={toggleSelect}
+          onStartEdit={startEdit}
+          onCopyLink={handleCopyLink}
+          onDelete={handleDelete}
+        />
 
-        <div className="panel">
-          <div className="album-header">
-            <h2 style={{ marginTop: 0 }}>Albums</h2>
-            <button className="button ghost" type="button" onClick={() => setShowAlbumForm((prev) => !prev)}>
-              <Plus aria-hidden="true" />
-              {showAlbumForm ? 'Close' : 'Create an album'}
-            </button>
-          </div>
-          {showAlbumForm ? (
-            <form className="stack" onSubmit={handleAlbumSubmit}>
-              <input
-                className="input"
-                type="text"
-                placeholder="Album title"
-                value={albumTitle}
-                onChange={(event) => setAlbumTitle(event.target.value)}
-                required
-              />
-              <input
-                className="input"
-                type="text"
-                placeholder="Album URL id (optional)"
-                value={albumPublicId}
-                onChange={(event) => setAlbumPublicId(sanitizePublicId(event.target.value))}
-              />
-              <textarea
-                className="input"
-                placeholder="Album description"
-                rows={3}
-                value={albumDescription}
-                onChange={(event) => setAlbumDescription(event.target.value)}
-              />
-              <div className="upload-inline">
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Tag"
-                  value={albumTag}
-                  onChange={(event) => setAlbumTag(event.target.value)}
-                />
-                <select
-                  className="input"
-                  value={albumVisibility}
-                  onChange={(event) => setAlbumVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
-                >
-                  <option value="public">Public</option>
-                  <option value="unlisted">Unlisted</option>
-                  <option value="private">Private</option>
-                </select>
-              </div>
-              <button className="button primary" type="submit">
-                {editingAlbumId ? 'Save album' : 'Create album'}
-              </button>
-            </form>
-          ) : null}
-          <div className="album-list">
-            {albums.map((album) => (
-              <div key={album.id} className="album-row">
-                <div>
-                  <div className="badge">{album.visibility || 'public'}</div>
-                  <div>{album.title}</div>
-                  <div className="muted">{album.description || 'No description'}</div>
-                </div>
-                <div className="action-row">
-                  <button className="icon-button" type="button" onClick={() => startAlbumEdit(album)}>
-                    <Pencil aria-hidden="true" />
-                  </button>
-                  <button className="icon-button danger" type="button" onClick={() => deleteAlbum(album.id)}>
-                    <Trash2 aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {albums.length === 0 ? <div className="notice">No albums created yet.</div> : null}
-          </div>
-        </div>
+        <AlbumPanel
+          albums={albums}
+          showAlbumForm={showAlbumForm}
+          editingAlbumId={editingAlbumId}
+          albumTitle={albumTitle}
+          albumDescription={albumDescription}
+          albumTag={albumTag}
+          albumPublicId={albumPublicId}
+          albumVisibility={albumVisibility}
+          onToggleForm={() => setShowAlbumForm((prev) => !prev)}
+          onSubmit={handleAlbumSubmit}
+          onTitleChange={(event) => setAlbumTitle(event.target.value)}
+          onDescriptionChange={(event) => setAlbumDescription(event.target.value)}
+          onTagChange={(event) => setAlbumTag(event.target.value)}
+          onPublicIdChange={(event) => setAlbumPublicId(sanitizePublicId(event.target.value))}
+          onVisibilityChange={(event) => setAlbumVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
+          onStartEdit={startAlbumEdit}
+          onDelete={deleteAlbum}
+        />
 
         {editingId ? (
-          <div className="panel">
-            <h2 style={{ marginTop: 0 }}>Edit image</h2>
-            <div className="stack">
-              <input
-                className="input"
-                type="text"
-                placeholder="Title"
-                value={editTitle}
-                onChange={(event) => setEditTitle(event.target.value)}
-              />
-              <textarea
-                className="input"
-                placeholder="Description"
-                rows={3}
-                value={editDescription}
-                onChange={(event) => setEditDescription(event.target.value)}
-              />
-              <input
-                className="input"
-                type="text"
-                placeholder="Tag"
-                value={editTag}
-                onChange={(event) => setEditTag(event.target.value)}
-              />
-              <input
-                className="input"
-                type="text"
-                placeholder="Location"
-                value={editLocation}
-                onChange={(event) => setEditLocation(event.target.value)}
-              />
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={editFeatured}
-                  onChange={(event) => setEditFeatured(event.target.checked)}
-                />
-                Featured
-              </label>
-              <div className="upload-exif">
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Camera make"
-                  value={editExifMake}
-                  onChange={(event) => setEditExifMake(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Camera model"
-                  value={editExifModel}
-                  onChange={(event) => setEditExifModel(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Lens"
-                  value={editExifLens}
-                  onChange={(event) => setEditExifLens(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="F-number"
-                  value={editExifFNumber}
-                  onChange={(event) => setEditExifFNumber(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Exposure"
-                  value={editExifExposure}
-                  onChange={(event) => setEditExifExposure(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="ISO"
-                  value={editExifIso}
-                  onChange={(event) => setEditExifIso(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Focal length"
-                  value={editExifFocal}
-                  onChange={(event) => setEditExifFocal(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Taken at"
-                  value={editExifTakenAt}
-                  onChange={(event) => setEditExifTakenAt(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Latitude"
-                  value={editExifLat}
-                  onChange={(event) => setEditExifLat(event.target.value)}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Longitude"
-                  value={editExifLng}
-                  onChange={(event) => setEditExifLng(event.target.value)}
-                />
-              </div>
-              <select
-                className="input"
-                value={editVisibility}
-                onChange={(event) => setEditVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
-              >
-                <option value="public">Public</option>
-                <option value="unlisted">Unlisted</option>
-                <option value="private">Private</option>
-              </select>
-              <div className="stack" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <button className="button" type="button" onClick={saveEdit}>
-                  Save changes
-                </button>
-                <button className="button" type="button" onClick={cancelEdit}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
+          <EditImagePanel
+            editTitle={editTitle}
+            editDescription={editDescription}
+            editTag={editTag}
+            editLocation={editLocation}
+            editFeatured={editFeatured}
+            editExifMake={editExifMake}
+            editExifModel={editExifModel}
+            editExifLens={editExifLens}
+            editExifFNumber={editExifFNumber}
+            editExifExposure={editExifExposure}
+            editExifIso={editExifIso}
+            editExifFocal={editExifFocal}
+            editExifTakenAt={editExifTakenAt}
+            editExifLat={editExifLat}
+            editExifLng={editExifLng}
+            editVisibility={editVisibility}
+            onTitleChange={(event) => setEditTitle(event.target.value)}
+            onDescriptionChange={(event) => setEditDescription(event.target.value)}
+            onTagChange={(event) => setEditTag(event.target.value)}
+            onLocationChange={(event) => setEditLocation(event.target.value)}
+            onFeaturedChange={(event) => setEditFeatured(event.target.checked)}
+            onExifMakeChange={(event) => setEditExifMake(event.target.value)}
+            onExifModelChange={(event) => setEditExifModel(event.target.value)}
+            onExifLensChange={(event) => setEditExifLens(event.target.value)}
+            onExifFNumberChange={(event) => setEditExifFNumber(event.target.value)}
+            onExifExposureChange={(event) => setEditExifExposure(event.target.value)}
+            onExifIsoChange={(event) => setEditExifIso(event.target.value)}
+            onExifFocalChange={(event) => setEditExifFocal(event.target.value)}
+            onExifTakenAtChange={(event) => setEditExifTakenAt(event.target.value)}
+            onExifLatChange={(event) => setEditExifLat(event.target.value)}
+            onExifLngChange={(event) => setEditExifLng(event.target.value)}
+            onVisibilityChange={(event) => setEditVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
+            onSave={saveEdit}
+            onCancel={cancelEdit}
+          />
         ) : null}
       </section>
     </div>
