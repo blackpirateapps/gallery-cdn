@@ -100,4 +100,10 @@ await db.execute(`CREATE TABLE IF NOT EXISTS album_images (
 
 await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS albums_public_id_unique ON albums(public_id)');
 
+await db.execute(`CREATE TABLE IF NOT EXISTS site_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at INTEGER NOT NULL
+)`);
+
 console.log('DB init complete.');

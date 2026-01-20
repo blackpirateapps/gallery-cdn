@@ -49,6 +49,11 @@ async function ensureSchema() {
     created_at INTEGER NOT NULL,
     PRIMARY KEY (album_id, image_id)
   )`);
+  await db.execute(`CREATE TABLE IF NOT EXISTS site_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT,
+    updated_at INTEGER NOT NULL
+  )`);
   await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS albums_public_id_unique ON albums(public_id)');
 
   const result = await db.execute('PRAGMA table_info(images)');
@@ -490,6 +495,11 @@ export type AlbumRecord = {
   created_at: number;
 };
 
+export type ProfileImage = {
+  key: string;
+  url: string;
+};
+
 export async function listAlbumsAll() {
   const db = getDb();
   await ensureSchema();
@@ -683,4 +693,34 @@ export async function listAlbumPreviewImages(albumId: number, limit: number) {
     title: row.title ? String(row.title) : null,
     description: row.description ? String(row.description) : null
   }));
+}
+
+export async function getProfileImage() {
+  const db = getDb();
+  await ensureSchema();
+  const result = await db.execute({
+    sql: 'SELECT value FROM site_settings WHERE key = ?',
+    args: ['profile_image']
+  });
+  const row = result.rows[0];
+  if (!row?.value) return null;
+  try {
+    const parsed = JSON.parse(String(row.value)) as ProfileImage;
+    if (parsed && typeof parsed.key === 'string' && typeof parsed.url === 'string') {
+      return { key: parsed.key, url: parsed.url };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+export async function setProfileImage(profile: ProfileImage) {
+  const db = getDb();
+  await ensureSchema();
+  const value = JSON.stringify({ key: profile.key, url: profile.url });
+  await db.execute({
+    sql: 'INSERT OR REPLACE INTO site_settings (key, value, updated_at) VALUES (?, ?, ?)',
+    args: ['profile_image', value, Date.now()]
+  });
 }

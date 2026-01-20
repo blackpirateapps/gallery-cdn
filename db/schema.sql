@@ -40,3 +40,9 @@ CREATE TABLE IF NOT EXISTS album_images (
   created_at INTEGER NOT NULL,
   PRIMARY KEY (album_id, image_id)
 );
+
+CREATE TABLE IF NOT EXISTS site_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at INTEGER NOT NULL
+);

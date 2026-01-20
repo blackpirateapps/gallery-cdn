@@ -1,13 +1,20 @@
 import HomeGalleryClient from './HomeGalleryClient';
-import { listAlbumPreviewImages, listAlbumsPublic, listFeaturedPublic, listImagesPublic } from '@/lib/db';
+import {
+  getProfileImage,
+  listAlbumPreviewImages,
+  listAlbumsPublic,
+  listFeaturedPublic,
+  listImagesPublic
+} from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [albums, images, featured] = await Promise.all([
+  const [albums, images, featured, profileImage] = await Promise.all([
     listAlbumsPublic(),
     listImagesPublic(),
-    listFeaturedPublic()
+    listFeaturedPublic(),
+    getProfileImage()
   ]);
   const previews = await Promise.all(albums.map((album) => listAlbumPreviewImages(album.id, 6)));
 
@@ -23,16 +30,33 @@ export default async function HomePage() {
       <main>
         <div className="container">
           <section className="hero">
-            <div>
+            <div className="hero-copy">
               <h1>Sudip's Gallery</h1>
               <p>Professional photography for portraits, events, and editorial stories. Clean visuals, honest light, and a modern gallery experience.</p>
               <div className="hero-cta">
                 <a className="button primary" href="https://wa.me/917908897908?text=Hi%20Sudip%2C%20I%27d%20like%20to%20hire%20you%20for%20a%20shoot.">Hire me on WhatsApp</a>
                 <span className="badge">Available for bookings</span>
               </div>
+              <div className="notice">
+                Curated highlights from recent shoots. For bookings and collaborations, reach out directly.
+              </div>
             </div>
-            <div className="notice">
-              Curated highlights from recent shoots. For bookings and collaborations, reach out directly.
+            <div className="hero-profile">
+              <div className="profile-card">
+                {profileImage?.url ? (
+                  <img src={profileImage.url} alt="Photographer profile" />
+                ) : (
+                  <div className="profile-placeholder">
+                    <div className="badge">Photographer</div>
+                    <p>Add a profile image from the admin dashboard.</p>
+                  </div>
+                )}
+                <div className="profile-meta">
+                  <div className="badge">Photographer</div>
+                  <h3>Sudip Das</h3>
+                  <p>Portraits, lifestyle, and editorial stories shot across India.</p>
+                </div>
+              </div>
             </div>
           </section>
           {featured.length ? (

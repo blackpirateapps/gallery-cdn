@@ -50,9 +50,17 @@ type AlbumRecord = {
   created_at: number;
 };
 
+type ProfileImage = {
+  key: string;
+  url: string;
+};
+
 export default function AdminClient() {
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [albums, setAlbums] = useState<AlbumRecord[]>([]);
+  const [profileImage, setProfileImage] = useState<ProfileImage | null>(null);
+  const [profileUploading, setProfileUploading] = useState(false);
+  const [profileStatus, setProfileStatus] = useState('');
   const [status, setStatus] = useState('');
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -157,9 +165,16 @@ export default function AdminClient() {
     setAlbums(data.albums || []);
   }
 
+  async function loadProfileImage() {
+    const response = await fetch('/api/profile-image');
+    const data = await response.json().catch(() => ({}));
+    setProfileImage(data.profileImage || null);
+  }
+
   useEffect(() => {
     loadImages().catch(() => setStatus('Failed to load images.'));
     loadAlbums().catch(() => setStatus('Failed to load albums.'));
+    loadProfileImage().catch(() => setProfileStatus('Failed to load profile image.'));
   }, []);
 
   useEffect(() => {
@@ -209,6 +224,78 @@ export default function AdminClient() {
       thumb: ensureFile(thumbBlob, `thumb-${file.name}`, targetType)
     };
   };
+
+  const buildProfileFile = async (file: File) => {
+    const targetType = file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg';
+    const blob = await imageCompression(file, {
+      maxSizeMB: 2,
+      maxWidthOrHeight: 1600,
+      useWebWorker: true,
+      fileType: targetType,
+      preserveExif: false
+    });
+    return ensureFile(blob, file.name, targetType);
+  };
+
+  async function handleProfileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setProfileUploading(true);
+    setProfileStatus('Uploading profile image...');
+
+    let uploadFile = file;
+    try {
+      uploadFile = await buildProfileFile(file);
+    } catch {
+      // fall back to original file
+    }
+
+    const presignResponse = await fetch('/api/r2-presign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: uploadFile.name, contentType: uploadFile.type, variant: 'profile' })
+    });
+
+    if (!presignResponse.ok) {
+      setProfileStatus('Failed to get upload URL.');
+      setProfileUploading(false);
+      return;
+    }
+
+    const presignData = await presignResponse.json();
+    const uploadResponse = await fetch(presignData.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': uploadFile.type || 'application/octet-stream' },
+      body: uploadFile
+    });
+
+    if (!uploadResponse.ok) {
+      setProfileStatus('Upload to R2 failed.');
+      setProfileUploading(false);
+      return;
+    }
+
+    const recordResponse = await fetch('/api/profile-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        key: presignData.key,
+        url: presignData.publicUrl
+      })
+    });
+
+    if (!recordResponse.ok) {
+      setProfileStatus('Failed to save profile image.');
+      setProfileUploading(false);
+      return;
+    }
+
+    setProfileStatus('Profile image updated.');
+    setProfileImage({ key: presignData.key, url: presignData.publicUrl });
+    setProfileUploading(false);
+    event.target.value = '';
+  }
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -818,6 +905,34 @@ export default function AdminClient() {
           {!selectedFile && !hasFormData ? (
             <div className="notice">Select an image to preview, auto-fill EXIF data, and set visibility.</div>
           ) : null}
+        </div>
+        <div className="panel profile-panel">
+          <div className="upload-header">
+            <div>
+              <h2 style={{ marginTop: 0 }}>Photographer image</h2>
+              <p className="muted">Upload a profile photo for the homepage.</p>
+            </div>
+            <div className="badge">PROFILE</div>
+          </div>
+          <div className="profile-preview">
+            {profileImage?.url ? (
+              <img src={profileImage.url} alt="Photographer profile" />
+            ) : (
+              <div className="upload-placeholder">
+                <div className="badge">Profile</div>
+                <p>No profile image yet.</p>
+              </div>
+            )}
+            <input
+              className="input"
+              type="file"
+              name="profile"
+              accept="image/*"
+              onChange={handleProfileUpload}
+              disabled={profileUploading}
+            />
+          </div>
+          {profileStatus ? <div className="notice">{profileStatus}</div> : null}
         </div>
         <div className="notice">Keep uploads lightweight for faster delivery on the public gallery.</div>
         <div className="notice">R2 must allow PUT from your domain (CORS) for direct uploads.</div>
