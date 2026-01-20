@@ -445,61 +445,80 @@ export default function AdminClient() {
             </div>
           </div>
         </div>
-        <div className="panel">
-          <h2 style={{ marginTop: 0 }}>Upload new image</h2>
-          <form ref={formRef} className="stack" onSubmit={handleUpload}>
-            <input className="input" type="file" name="file" accept="image/*" required onChange={handleFileChange} />
-            {previewUrl ? (
-              <img src={previewUrl} alt="Preview" style={{ width: '100%', borderRadius: '12px' }} />
-            ) : null}
-            <input
-              className="input"
-              type="text"
-              placeholder="Title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              required
-            />
-            <textarea
-              className="input"
-              placeholder="Description"
-              rows={3}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
-            <input
-              className="input"
-              type="text"
-              placeholder="Tag"
-              value={tag}
-              onChange={(event) => setTag(event.target.value)}
-            />
-            <input
-              className="input"
-              type="text"
-              placeholder="Location"
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-            />
-            <textarea
-              className="input"
-              placeholder="EXIF data (JSON)"
-              rows={6}
-              value={exifText}
-              onChange={(event) => setExifText(event.target.value)}
-            />
-            <select
-              className="input"
-              value={visibility}
-              onChange={(event) => setVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
-            >
-              <option value="public">Public</option>
-              <option value="unlisted">Unlisted</option>
-              <option value="private">Private</option>
-            </select>
-            <button className="button" type="submit" disabled={uploading}>
-              {uploading ? 'Uploading...' : 'Upload image'}
-            </button>
+        <div className="panel upload-panel">
+          <div className="upload-header">
+            <div>
+              <h2 style={{ marginTop: 0 }}>Upload new image</h2>
+              <p className="muted">Drag in a shot, add metadata, then publish or keep it private.</p>
+            </div>
+            <div className="badge">{visibility.toUpperCase()}</div>
+          </div>
+          <form ref={formRef} className="upload-grid" onSubmit={handleUpload}>
+            <div className="upload-preview">
+              {previewUrl ? (
+                <img src={previewUrl} alt="Preview" />
+              ) : (
+                <div className="upload-placeholder">
+                  <div className="badge">Preview</div>
+                  <p>Drop a photo to see the preview here.</p>
+                </div>
+              )}
+              <input className="input" type="file" name="file" accept="image/*" required onChange={handleFileChange} />
+            </div>
+            <div className="upload-fields">
+              <input
+                className="input"
+                type="text"
+                placeholder="Title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                required
+              />
+              <textarea
+                className="input"
+                placeholder="Description"
+                rows={3}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+              <div className="upload-inline">
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Tag"
+                  value={tag}
+                  onChange={(event) => setTag(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Location"
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
+                />
+              </div>
+              <textarea
+                className="input"
+                placeholder="EXIF data (JSON)"
+                rows={6}
+                value={exifText}
+                onChange={(event) => setExifText(event.target.value)}
+              />
+              <div className="upload-inline">
+                <select
+                  className="input"
+                  value={visibility}
+                  onChange={(event) => setVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
+                >
+                  <option value="public">Public</option>
+                  <option value="unlisted">Unlisted</option>
+                  <option value="private">Private</option>
+                </select>
+                <button className="button primary" type="submit" disabled={uploading}>
+                  {uploading ? 'Uploading...' : 'Upload image'}
+                </button>
+              </div>
+            </div>
           </form>
           {!selectedFile && !hasFormData ? (
             <div className="notice">Select an image to preview, auto-fill EXIF data, and set visibility.</div>
