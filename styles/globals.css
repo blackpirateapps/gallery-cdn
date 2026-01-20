@@ -387,6 +387,48 @@ main {
   color: var(--muted);
 }
 
+.featured {
+  margin-top: 32px;
+  display: grid;
+  gap: 16px;
+}
+
+.featured-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.featured-card {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(14, 14, 14, 0.7);
+  display: grid;
+}
+
+.featured-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.featured-meta {
+  padding: 14px;
+}
+
+.featured-meta h3 {
+  margin: 0 0 6px;
+}
+
 .album-preview {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -537,6 +579,18 @@ main {
 
 .input::placeholder {
   color: rgba(183, 178, 168, 0.6);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.check input {
+  accent-color: var(--accent);
 }
 
 select.input {

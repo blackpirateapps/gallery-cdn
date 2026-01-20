@@ -28,6 +28,7 @@ async function ensureSchema() {
     exif_taken_at TEXT,
     exif_lat TEXT,
     exif_lng TEXT,
+    featured INTEGER,
     visibility TEXT,
     created_at INTEGER NOT NULL
   )`);
@@ -70,6 +71,7 @@ async function ensureSchema() {
     'exif_taken_at',
     'exif_lat',
     'exif_lng',
+    'featured',
     'visibility'
   ];
   for (const column of columns) {
@@ -133,6 +135,16 @@ async function ensureSchema() {
     });
   }
 
+  const missingFeatured = await db.execute(
+    "SELECT id FROM images WHERE featured IS NULL"
+  );
+  for (const row of missingFeatured.rows) {
+    await db.execute({
+      sql: 'UPDATE images SET featured = ? WHERE id = ?',
+      args: [0, row.id]
+    });
+  }
+
   schemaReady = true;
 }
 
@@ -169,6 +181,7 @@ export type ImageRecord = {
   exif_taken_at: string | null;
   exif_lat: string | null;
   exif_lng: string | null;
+  featured: number | null;
   visibility: string | null;
   created_at: number;
 };
@@ -177,7 +190,7 @@ export async function listImagesAll() {
   const db = getDb();
   await ensureSchema();
   const result = await db.execute(
-    'SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, visibility, created_at FROM images ORDER BY created_at DESC'
+    'SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, featured, visibility, created_at FROM images ORDER BY created_at DESC'
   );
   return result.rows.map((row) => ({
     id: Number(row.id),
@@ -200,6 +213,7 @@ export async function listImagesAll() {
     exif_taken_at: row.exif_taken_at ? String(row.exif_taken_at) : null,
     exif_lat: row.exif_lat ? String(row.exif_lat) : null,
     exif_lng: row.exif_lng ? String(row.exif_lng) : null,
+    featured: row.featured !== null && row.featured !== undefined ? Number(row.featured) : null,
     visibility: row.visibility ? String(row.visibility) : null,
     created_at: Number(row.created_at)
   }));
@@ -209,7 +223,7 @@ export async function listImagesPublic() {
   const db = getDb();
   await ensureSchema();
   const result = await db.execute(
-    "SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, visibility, created_at FROM images WHERE visibility = 'public' ORDER BY created_at DESC"
+    "SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, featured, visibility, created_at FROM images WHERE visibility = 'public' ORDER BY created_at DESC"
   );
   return result.rows.map((row) => ({
     id: Number(row.id),
@@ -232,6 +246,40 @@ export async function listImagesPublic() {
     exif_taken_at: row.exif_taken_at ? String(row.exif_taken_at) : null,
     exif_lat: row.exif_lat ? String(row.exif_lat) : null,
     exif_lng: row.exif_lng ? String(row.exif_lng) : null,
+    featured: row.featured !== null && row.featured !== undefined ? Number(row.featured) : null,
+    visibility: row.visibility ? String(row.visibility) : null,
+    created_at: Number(row.created_at)
+  }));
+}
+
+export async function listFeaturedPublic() {
+  const db = getDb();
+  await ensureSchema();
+  const result = await db.execute(
+    "SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, featured, visibility, created_at FROM images WHERE visibility = 'public' AND featured = 1 ORDER BY created_at DESC"
+  );
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    key: String(row.key),
+    url: String(row.url),
+    public_id: String(row.public_id),
+    thumb_key: row.thumb_key ? String(row.thumb_key) : null,
+    thumb_url: row.thumb_url ? String(row.thumb_url) : null,
+    title: row.title ? String(row.title) : null,
+    description: row.description ? String(row.description) : null,
+    tag: row.tag ? String(row.tag) : null,
+    location: row.location ? String(row.location) : null,
+    exif_make: row.exif_make ? String(row.exif_make) : null,
+    exif_model: row.exif_model ? String(row.exif_model) : null,
+    exif_lens: row.exif_lens ? String(row.exif_lens) : null,
+    exif_fnumber: row.exif_fnumber ? String(row.exif_fnumber) : null,
+    exif_exposure: row.exif_exposure ? String(row.exif_exposure) : null,
+    exif_iso: row.exif_iso ? String(row.exif_iso) : null,
+    exif_focal: row.exif_focal ? String(row.exif_focal) : null,
+    exif_taken_at: row.exif_taken_at ? String(row.exif_taken_at) : null,
+    exif_lat: row.exif_lat ? String(row.exif_lat) : null,
+    exif_lng: row.exif_lng ? String(row.exif_lng) : null,
+    featured: row.featured !== null && row.featured !== undefined ? Number(row.featured) : null,
     visibility: row.visibility ? String(row.visibility) : null,
     created_at: Number(row.created_at)
   }));
@@ -257,6 +305,7 @@ export async function insertImage(options: {
   exifTakenAt?: string;
   exifLat?: string;
   exifLng?: string;
+  featured?: boolean;
   visibility?: 'public' | 'unlisted' | 'private';
 }) {
   const db = getDb();
@@ -266,7 +315,7 @@ export async function insertImage(options: {
   const visibility = options.visibility ?? 'public';
   const result = await db.execute({
     sql:
-      'INSERT INTO images (key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, visibility, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO images (key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, featured, visibility, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     args: [
       options.key,
       options.url,
@@ -287,6 +336,7 @@ export async function insertImage(options: {
       options.exifTakenAt ?? null,
       options.exifLat ?? null,
       options.exifLng ?? null,
+      options.featured ? 1 : 0,
       visibility,
       createdAt
     ]
@@ -325,6 +375,7 @@ export async function updateImageMeta(
     exifTakenAt?: string | null;
     exifLat?: string | null;
     exifLng?: string | null;
+    featured?: boolean;
     visibility?: 'public' | 'unlisted' | 'private';
   }
 ) {
@@ -332,7 +383,7 @@ export async function updateImageMeta(
   await ensureSchema();
   await db.execute({
     sql:
-      'UPDATE images SET title = ?, description = ?, tag = ?, location = ?, exif_make = ?, exif_model = ?, exif_lens = ?, exif_fnumber = ?, exif_exposure = ?, exif_iso = ?, exif_focal = ?, exif_taken_at = ?, exif_lat = ?, exif_lng = ?, visibility = ? WHERE id = ?',
+      'UPDATE images SET title = ?, description = ?, tag = ?, location = ?, exif_make = ?, exif_model = ?, exif_lens = ?, exif_fnumber = ?, exif_exposure = ?, exif_iso = ?, exif_focal = ?, exif_taken_at = ?, exif_lat = ?, exif_lng = ?, featured = ?, visibility = ? WHERE id = ?',
     args: [
       fields.title ?? null,
       fields.description ?? null,
@@ -348,6 +399,7 @@ export async function updateImageMeta(
       fields.exifTakenAt ?? null,
       fields.exifLat ?? null,
       fields.exifLng ?? null,
+      fields.featured ? 1 : 0,
       fields.visibility ?? 'public',
       id
     ]
@@ -359,7 +411,7 @@ export async function getImageById(id: number) {
   await ensureSchema();
   const result = await db.execute({
     sql:
-      'SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, visibility, created_at FROM images WHERE id = ?',
+      'SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, featured, visibility, created_at FROM images WHERE id = ?',
     args: [id]
   });
   const row = result.rows[0];
@@ -385,6 +437,7 @@ export async function getImageById(id: number) {
     exif_taken_at: row.exif_taken_at ? String(row.exif_taken_at) : null,
     exif_lat: row.exif_lat ? String(row.exif_lat) : null,
     exif_lng: row.exif_lng ? String(row.exif_lng) : null,
+    featured: row.featured !== null && row.featured !== undefined ? Number(row.featured) : null,
     visibility: row.visibility ? String(row.visibility) : null,
     created_at: Number(row.created_at)
   };
@@ -395,7 +448,7 @@ export async function getImageByPublicId(publicId: string) {
   await ensureSchema();
   const result = await db.execute({
     sql:
-      'SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, visibility, created_at FROM images WHERE public_id = ?',
+      'SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, featured, visibility, created_at FROM images WHERE public_id = ?',
     args: [publicId]
   });
   const row = result.rows[0];
@@ -421,6 +474,7 @@ export async function getImageByPublicId(publicId: string) {
     exif_taken_at: row.exif_taken_at ? String(row.exif_taken_at) : null,
     exif_lat: row.exif_lat ? String(row.exif_lat) : null,
     exif_lng: row.exif_lng ? String(row.exif_lng) : null,
+    featured: row.featured !== null && row.featured !== undefined ? Number(row.featured) : null,
     visibility: row.visibility ? String(row.visibility) : null,
     created_at: Number(row.created_at)
   };

@@ -35,6 +35,7 @@ type ImageRecord = {
   exif_taken_at: string | null;
   exif_lat: string | null;
   exif_lng: string | null;
+  featured: number | null;
   visibility: string | null;
   created_at: number;
 };
@@ -72,6 +73,7 @@ export default function AdminClient() {
   const [exifLat, setExifLat] = useState('');
   const [exifLng, setExifLng] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [featured, setFeatured] = useState(false);
   const [albumId, setAlbumId] = useState<number | ''>('');
   const formRef = useRef<HTMLFormElement | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -90,6 +92,7 @@ export default function AdminClient() {
   const [editExifLat, setEditExifLat] = useState('');
   const [editExifLng, setEditExifLng] = useState('');
   const [editVisibility, setEditVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [editFeatured, setEditFeatured] = useState(false);
   const [albumTitle, setAlbumTitle] = useState('');
   const [albumDescription, setAlbumDescription] = useState('');
   const [albumTag, setAlbumTag] = useState('');
@@ -120,6 +123,7 @@ export default function AdminClient() {
       exifTakenAt ||
       exifLat ||
       exifLng ||
+      featured ||
       visibility !== 'public',
     [
       title,
@@ -136,6 +140,7 @@ export default function AdminClient() {
       exifTakenAt,
       exifLat,
       exifLng,
+      featured,
       visibility
     ]
   );
@@ -402,6 +407,7 @@ export default function AdminClient() {
         exifTakenAt,
         exifLat,
         exifLng,
+        featured,
         visibility,
         albumId: albumId === '' ? null : albumId
       })
@@ -439,6 +445,7 @@ export default function AdminClient() {
     setExifTakenAt('');
     setExifLat('');
     setExifLng('');
+    setFeatured(false);
     setVisibility('public');
     setAlbumId('');
     formRef.current?.reset();
@@ -558,6 +565,7 @@ export default function AdminClient() {
     setEditDescription(image.description || '');
     setEditTag(image.tag || '');
     setEditLocation(image.location || '');
+    setEditFeatured(Boolean(image.featured));
     setEditExifMake(image.exif_make || '');
     setEditExifModel(image.exif_model || '');
     setEditExifLens(image.exif_lens || '');
@@ -579,6 +587,7 @@ export default function AdminClient() {
     setEditDescription('');
     setEditTag('');
     setEditLocation('');
+    setEditFeatured(false);
     setEditExifMake('');
     setEditExifModel('');
     setEditExifLens('');
@@ -612,6 +621,7 @@ export default function AdminClient() {
         exifTakenAt: editExifTakenAt,
         exifLat: editExifLat,
         exifLng: editExifLng,
+        featured: editFeatured,
         visibility: editVisibility
       })
     });
@@ -779,10 +789,18 @@ export default function AdminClient() {
                   <option value="unlisted">Unlisted</option>
                   <option value="private">Private</option>
                 </select>
-                <button className="button primary" type="submit" disabled={uploading}>
-                  {uploading ? 'Uploading...' : 'Upload image'}
-                </button>
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={featured}
+                    onChange={(event) => setFeatured(event.target.checked)}
+                  />
+                  Featured
+                </label>
               </div>
+              <button className="button primary" type="submit" disabled={uploading}>
+                {uploading ? 'Uploading...' : 'Upload image'}
+              </button>
               <select
                 className="input"
                 value={albumId}
@@ -908,6 +926,7 @@ export default function AdminClient() {
                     <div className="badge">{image.tag || 'No tag'}</div>
                     <div>{image.location || new Date(image.created_at).toLocaleString()}</div>
                     <div className="badge">{image.visibility || 'public'}</div>
+                    {image.featured ? <div className="badge">Featured</div> : null}
                   </td>
                   <td>
                     <div className="action-row">
@@ -1038,6 +1057,14 @@ export default function AdminClient() {
                 value={editLocation}
                 onChange={(event) => setEditLocation(event.target.value)}
               />
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={editFeatured}
+                  onChange={(event) => setEditFeatured(event.target.checked)}
+                />
+                Featured
+              </label>
               <div className="upload-exif">
                 <input
                   className="input"

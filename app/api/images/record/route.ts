@@ -24,6 +24,7 @@ export async function POST(request: Request) {
   const exifTakenAt = body?.exifTakenAt;
   const exifLat = body?.exifLat;
   const exifLng = body?.exifLng;
+  const featured = body?.featured;
   const thumbKey = body?.thumbKey;
   const thumbUrl = body?.thumbUrl;
   const visibility = body?.visibility;
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
     exifTakenAt: exifTakenAt ? String(exifTakenAt) : undefined,
     exifLat: exifLat ? String(exifLat) : undefined,
     exifLng: exifLng ? String(exifLng) : undefined,
+    featured: Boolean(featured),
     visibility: visibility === 'private' || visibility === 'unlisted' ? visibility : 'public'
   });
 

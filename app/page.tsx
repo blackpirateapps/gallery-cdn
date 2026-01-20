@@ -1,10 +1,14 @@
 import HomeGalleryClient from './HomeGalleryClient';
-import { listAlbumPreviewImages, listAlbumsPublic, listImagesPublic } from '@/lib/db';
+import { listAlbumPreviewImages, listAlbumsPublic, listFeaturedPublic, listImagesPublic } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [albums, images] = await Promise.all([listAlbumsPublic(), listImagesPublic()]);
+  const [albums, images, featured] = await Promise.all([
+    listAlbumsPublic(),
+    listImagesPublic(),
+    listFeaturedPublic()
+  ]);
   const previews = await Promise.all(albums.map((album) => listAlbumPreviewImages(album.id, 3)));
 
   return (
@@ -54,6 +58,25 @@ export default async function HomePage() {
               <div className="notice">No public albums yet. Create one from the admin dashboard.</div>
             )}
           </section>
+          {featured.length ? (
+            <section className="featured">
+              <div className="featured-header">
+                <h2>Featured</h2>
+                <p className="muted">Selected highlights from recent sessions.</p>
+              </div>
+              <div className="featured-grid">
+                {featured.map((image) => (
+                  <a className="featured-card" key={image.id} href={`/images/${image.public_id}`}>
+                    <img src={image.url} alt={image.title || `Featured image ${image.id}`} loading="lazy" />
+                    <div className="featured-meta">
+                      <h3>{image.title || 'Untitled'}</h3>
+                      <p>{image.description || 'View details'}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
           <HomeGalleryClient images={images} />
         </div>
       </main>

@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS images (
   exif_taken_at TEXT,
   exif_lat TEXT,
   exif_lng TEXT,
+  featured INTEGER,
   visibility TEXT,
   created_at INTEGER NOT NULL
 );
