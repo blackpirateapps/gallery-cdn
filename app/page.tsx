@@ -1,10 +1,11 @@
 import HomeGalleryClient from './HomeGalleryClient';
-import { listAlbumsPublic, listImagesPublic } from '@/lib/db';
+import { listAlbumPreviewImages, listAlbumsPublic, listImagesPublic } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const [albums, images] = await Promise.all([listAlbumsPublic(), listImagesPublic()]);
+  const previews = await Promise.all(albums.map((album) => listAlbumPreviewImages(album.id, 3)));
 
   return (
     <>
@@ -31,11 +32,22 @@ export default async function HomePage() {
             </div>
           </section>
           <section className="album-grid">
-            {albums.map((album) => (
+            {albums.map((album, index) => (
               <a className="album-card" key={album.id} href={`/albums/${album.public_id}`}>
                 <div className="album-badge">{album.tag || 'Album'}</div>
                 <h3>{album.title}</h3>
                 <p>{album.description || 'View album'}</p>
+                <div className="album-preview">
+                  {previews[index]?.map((image) => (
+                    <img
+                      key={image.id}
+                      src={image.thumb_url || image.url}
+                      alt={image.title || 'Album preview'}
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+                <div className="button ghost">View more</div>
               </a>
             ))}
             {albums.length === 0 && (

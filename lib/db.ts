@@ -48,6 +48,7 @@ async function ensureSchema() {
     created_at INTEGER NOT NULL,
     PRIMARY KEY (album_id, image_id)
   )`);
+  await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS albums_public_id_unique ON albums(public_id)');
 
   const result = await db.execute('PRAGMA table_info(images)');
   const existing = new Set(result.rows.map((row) => String(row.name)));
@@ -480,6 +481,13 @@ export async function createAlbum(options: {
   await ensureSchema();
   const createdAt = Date.now();
   const publicId = options.publicId ?? crypto.randomUUID();
+  const taken = await db.execute({
+    sql: 'SELECT id FROM albums WHERE public_id = ?',
+    args: [publicId]
+  });
+  if (taken.rows.length) {
+    throw new Error('Album public id already exists');
+  }
   const visibility = options.visibility ?? 'public';
   const result = await db.execute({
     sql: 'INSERT INTO albums (public_id, title, description, tag, visibility, created_at) VALUES (?, ?, ?, ?, ?, ?)',
@@ -501,6 +509,15 @@ export async function updateAlbum(
 ) {
   const db = getDb();
   await ensureSchema();
+  if (fields.publicId) {
+    const taken = await db.execute({
+      sql: 'SELECT id FROM albums WHERE public_id = ? AND id != ?',
+      args: [fields.publicId, id]
+    });
+    if (taken.rows.length) {
+      throw new Error('Album public id already exists');
+    }
+  }
   await db.execute({
     sql: 'UPDATE albums SET title = ?, description = ?, tag = ?, public_id = ?, visibility = ? WHERE id = ?',
     args: [
@@ -593,5 +610,23 @@ export async function listImagesForAlbum(albumId: number) {
     exif_lng: row.exif_lng ? String(row.exif_lng) : null,
     visibility: row.visibility ? String(row.visibility) : null,
     created_at: Number(row.created_at)
+  }));
+}
+
+export async function listAlbumPreviewImages(albumId: number, limit: number) {
+  const db = getDb();
+  await ensureSchema();
+  const result = await db.execute({
+    sql:
+      'SELECT images.id, images.url, images.public_id, images.thumb_url, images.title, images.description FROM images INNER JOIN album_images ON album_images.image_id = images.id WHERE album_images.album_id = ? ORDER BY images.created_at DESC LIMIT ?',
+    args: [albumId, limit]
+  });
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    url: String(row.url),
+    public_id: String(row.public_id),
+    thumb_url: row.thumb_url ? String(row.thumb_url) : null,
+    title: row.title ? String(row.title) : null,
+    description: row.description ? String(row.description) : null
   }));
 }

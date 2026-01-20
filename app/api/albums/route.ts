@@ -30,13 +30,18 @@ export async function POST(request: Request) {
   const allowedVisibility =
     visibility === 'private' || visibility === 'unlisted' || visibility === 'public' ? visibility : 'public';
 
-  const result = await createAlbum({
-    title,
-    description: body?.description ? String(body.description) : undefined,
-    tag: body?.tag ? String(body.tag) : undefined,
-    publicId: publicId ? String(publicId) : undefined,
-    visibility: allowedVisibility
-  });
+  try {
+    const result = await createAlbum({
+      title,
+      description: body?.description ? String(body.description) : undefined,
+      tag: body?.tag ? String(body.tag) : undefined,
+      publicId: publicId ? String(publicId) : undefined,
+      visibility: allowedVisibility
+    });
 
-  return NextResponse.json({ ok: true, albumId: result.id, publicId: result.publicId });
+    return NextResponse.json({ ok: true, albumId: result.id, publicId: result.publicId });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to create album';
+    return NextResponse.json({ error: message }, { status: 409 });
+  }
 }

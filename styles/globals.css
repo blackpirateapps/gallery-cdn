@@ -358,6 +358,21 @@ main {
   color: var(--muted);
 }
 
+.album-preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.album-preview img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
 .album-list {
   margin-top: 18px;
   display: grid;

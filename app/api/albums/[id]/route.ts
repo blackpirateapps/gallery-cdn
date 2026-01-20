@@ -21,15 +21,20 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     return NextResponse.json({ error: 'Invalid public id' }, { status: 400 });
   }
 
-  await updateAlbum(id, {
-    title: body?.title ?? null,
-    description: body?.description ?? null,
-    tag: body?.tag ?? null,
-    publicId: publicId ? String(publicId) : null,
-    visibility: allowedVisibility
-  });
+  try {
+    await updateAlbum(id, {
+      title: body?.title ?? null,
+      description: body?.description ?? null,
+      tag: body?.tag ?? null,
+      publicId: publicId ? String(publicId) : null,
+      visibility: allowedVisibility
+    });
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to update album';
+    return NextResponse.json({ error: message }, { status: 409 });
+  }
 }
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {

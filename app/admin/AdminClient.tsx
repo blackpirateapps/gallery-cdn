@@ -462,7 +462,8 @@ export default function AdminClient() {
         })
       });
       if (!response.ok) {
-        setStatus('Failed to update album.');
+        const data = await response.json().catch(() => ({}));
+        setStatus(data.error || 'Failed to update album.');
         return;
       }
       setStatus('Album updated.');
@@ -479,7 +480,8 @@ export default function AdminClient() {
         })
       });
       if (!response.ok) {
-        setStatus('Failed to create album.');
+        const data = await response.json().catch(() => ({}));
+        setStatus(data.error || 'Failed to create album.');
         return;
       }
       setStatus('Album created.');
