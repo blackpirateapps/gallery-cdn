@@ -1,4 +1,5 @@
 import HomeGalleryClient from './HomeGalleryClient';
+import { Camera, MessageCircle, Shield } from 'lucide-react';
 import {
   getProfileImage,
   listAlbumPreviewImages,
@@ -22,10 +23,19 @@ export default async function HomePage() {
     <>
       <div className="container">
         <nav className="nav">
-          <div className="logo">Sudip Mandal</div>
+          <div className="logo">
+            <Camera aria-hidden size={18} />
+            <span>Sudip Mandal</span>
+          </div>
           <div className="nav-actions">
-            <a className="button ghost" href="https://wa.me/917908897908?text=Hi%20Sudip%20Mandal%2C%20I%27d%20like%20to%20hire%20you%20for%20a%20shoot.">Contact</a>
-            <a className="button" href="/login">Admin</a>
+            <a className="button ghost" href="https://wa.me/917908897908?text=Hi%20Sudip%20Mandal%2C%20I%27d%20like%20to%20hire%20you%20for%20a%20shoot.">
+              <MessageCircle aria-hidden size={16} />
+              Contact
+            </a>
+            <a className="button" href="/login">
+              <Shield aria-hidden size={16} />
+              Admin
+            </a>
           </div>
         </nav>
 

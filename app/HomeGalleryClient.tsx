@@ -98,10 +98,10 @@ export default function HomeGalleryClient({ images }: { images: ImageRecord[] })
 
                <div className="lightbox-meta glass" onClick={(e) => e.stopPropagation()}>
                 <div>
-                  <strong>{activeImage.title || 'Untitled'}</strong>
+                  {activeImage.title ? <strong>{activeImage.title}</strong> : null}
                   {activeImage.description ? <div className="muted">{activeImage.description}</div> : null}
                 </div>
-                <a className="button primary" href={`/images/${activeImage.public_id}`} onClick={(e) => e.stopPropagation()}>
+                <a className="chip subtle" href={`/images/${activeImage.public_id}`} onClick={(e) => e.stopPropagation()}>
                   View details
                 </a>
               </div>
