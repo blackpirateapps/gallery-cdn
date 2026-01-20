@@ -1,6 +1,37 @@
 import { createClient } from '@libsql/client';
 
 let client: ReturnType<typeof createClient> | null = null;
+let schemaReady = false;
+
+async function ensureSchema() {
+  if (schemaReady) return;
+  const db = getDb();
+  await db.execute(`CREATE TABLE IF NOT EXISTS images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    key TEXT NOT NULL,
+    url TEXT NOT NULL,
+    title TEXT,
+    description TEXT,
+    tag TEXT,
+    location TEXT,
+    exif_json TEXT,
+    created_at INTEGER NOT NULL
+  )`);
+
+  const result = await db.execute('PRAGMA table_info(images)');
+  const existing = new Set(result.rows.map((row) => String(row.name)));
+  const columns = ['title', 'description', 'tag', 'location', 'exif_json'];
+  for (const column of columns) {
+    if (!existing.has(column)) {
+      await db.execute(`ALTER TABLE images ADD COLUMN ${column} TEXT`);
+    }
+  }
+  if (!existing.has('created_at')) {
+    await db.execute('ALTER TABLE images ADD COLUMN created_at INTEGER');
+  }
+
+  schemaReady = true;
+}
 
 export function getDb() {
   if (!client) {
@@ -18,31 +49,64 @@ export type ImageRecord = {
   id: number;
   key: string;
   url: string;
+  title: string | null;
+  description: string | null;
+  tag: string | null;
+  location: string | null;
+  exif_json: string | null;
   created_at: number;
 };
 
 export async function listImages() {
   const db = getDb();
-  const result = await db.execute('SELECT id, key, url, created_at FROM images ORDER BY created_at DESC');
+  await ensureSchema();
+  const result = await db.execute(
+    'SELECT id, key, url, title, description, tag, location, exif_json, created_at FROM images ORDER BY created_at DESC'
+  );
   return result.rows.map((row) => ({
     id: Number(row.id),
     key: String(row.key),
     url: String(row.url),
+    title: row.title ? String(row.title) : null,
+    description: row.description ? String(row.description) : null,
+    tag: row.tag ? String(row.tag) : null,
+    location: row.location ? String(row.location) : null,
+    exif_json: row.exif_json ? String(row.exif_json) : null,
     created_at: Number(row.created_at)
   }));
 }
 
-export async function insertImage(key: string, url: string) {
+export async function insertImage(options: {
+  key: string;
+  url: string;
+  title?: string;
+  description?: string;
+  tag?: string;
+  location?: string;
+  exifJson?: string;
+}) {
   const db = getDb();
+  await ensureSchema();
   const createdAt = Date.now();
   await db.execute({
-    sql: 'INSERT INTO images (key, url, created_at) VALUES (?, ?, ?)',
-    args: [key, url, createdAt]
+    sql:
+      'INSERT INTO images (key, url, title, description, tag, location, exif_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [
+      options.key,
+      options.url,
+      options.title ?? null,
+      options.description ?? null,
+      options.tag ?? null,
+      options.location ?? null,
+      options.exifJson ?? null,
+      createdAt
+    ]
   });
 }
 
 export async function deleteImage(id: number) {
   const db = getDb();
+  await ensureSchema();
   await db.execute({
     sql: 'DELETE FROM images WHERE id = ?',
     args: [id]
@@ -51,8 +115,9 @@ export async function deleteImage(id: number) {
 
 export async function getImageById(id: number) {
   const db = getDb();
+  await ensureSchema();
   const result = await db.execute({
-    sql: 'SELECT id, key, url, created_at FROM images WHERE id = ?',
+    sql: 'SELECT id, key, url, title, description, tag, location, exif_json, created_at FROM images WHERE id = ?',
     args: [id]
   });
   const row = result.rows[0];
@@ -61,6 +126,11 @@ export async function getImageById(id: number) {
     id: Number(row.id),
     key: String(row.key),
     url: String(row.url),
+    title: row.title ? String(row.title) : null,
+    description: row.description ? String(row.description) : null,
+    tag: row.tag ? String(row.tag) : null,
+    location: row.location ? String(row.location) : null,
+    exif_json: row.exif_json ? String(row.exif_json) : null,
     created_at: Number(row.created_at)
   };
 }

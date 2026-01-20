@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
   await uploadImage(key, body, contentType);
   const url = getPublicUrl(key);
-  await insertImage(key, url);
+  await insertImage({ key, url });
 
   return NextResponse.json({ ok: true, url });
 }

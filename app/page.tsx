@@ -26,7 +26,10 @@ export default async function HomePage() {
             {images.map((image) => (
               <div className="card" key={image.id}>
                 <img src={image.url} alt={`Gallery item ${image.id}`} loading="lazy" />
-                <div className="meta">{new Date(image.created_at).toLocaleDateString()}</div>
+                <div className="meta">
+                  {image.title ? <strong>{image.title}</strong> : null}
+                  <div>{image.description || new Date(image.created_at).toLocaleDateString()}</div>
+                </div>
               </div>
             ))}
             {images.length === 0 && (
