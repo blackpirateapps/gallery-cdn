@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Loader2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 type ImageRecord = {
@@ -14,21 +14,27 @@ type ImageRecord = {
 
 export default function HomeGalleryClient({ images }: { images: ImageRecord[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
 
   const activeImage = useMemo(() => {
     if (activeIndex === null) return null;
     return images[activeIndex] || null;
   }, [activeIndex, images]);
 
-  const openAt = (index: number) => setActiveIndex(index);
+  const openAt = (index: number) => {
+    setActiveIndex(index);
+    setImageLoading(true);
+  };
   const close = () => setActiveIndex(null);
   const next = () => {
     if (activeIndex === null) return;
     setActiveIndex((activeIndex + 1) % images.length);
+    setImageLoading(true);
   };
   const prev = () => {
     if (activeIndex === null) return;
     setActiveIndex((activeIndex - 1 + images.length) % images.length);
+    setImageLoading(true);
   };
 
   useEffect(() => {
@@ -71,7 +77,20 @@ export default function HomeGalleryClient({ images }: { images: ImageRecord[] })
             <button className="lightbox-nav prev" type="button" onClick={prev} aria-label="Previous image">
               <ChevronLeft aria-hidden="true" />
             </button>
-            <img className="lightbox-image" src={activeImage.url} alt={activeImage.title || 'Gallery image'} />
+            <div className="lightbox-image-wrap">
+              {imageLoading ? (
+                <div className="lightbox-loading">
+                  <Loader2 aria-hidden="true" />
+                  <span>Loading image</span>
+                </div>
+              ) : null}
+              <img
+                className="lightbox-image"
+                src={activeImage.url}
+                alt={activeImage.title || 'Gallery image'}
+                onLoad={() => setImageLoading(false)}
+              />
+            </div>
             <button className="lightbox-nav next" type="button" onClick={next} aria-label="Next image">
               <ChevronRight aria-hidden="true" />
             </button>
@@ -82,9 +101,11 @@ export default function HomeGalleryClient({ images }: { images: ImageRecord[] })
               </div>
               <div className="lightbox-actions">
                 <a className="button primary" href={`/images/${activeImage.public_id}`}>
+                  <Eye aria-hidden="true" />
                   View details
                 </a>
                 <button className="button" type="button" onClick={close}>
+                  <X aria-hidden="true" />
                   Close
                 </button>
               </div>
