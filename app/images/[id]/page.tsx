@@ -16,7 +16,22 @@ export default async function ImageDetailPage({ params }: { params: { id: string
   }
 
   if (image.visibility === 'private' && !isAuthed()) {
-    notFound();
+    return (
+      <>
+        <nav className="nav">
+          <a className="logo" href="/">Gallery CDN</a>
+          <Link className="button" href="/">Back to gallery</Link>
+        </nav>
+        <main>
+          <div className="container">
+            <div className="panel">
+              <h1>This image is private.</h1>
+              <p>Ask an admin to change the privacy settings if you need access.</p>
+            </div>
+          </div>
+        </main>
+      </>
+    );
   }
 
   let exif: Record<string, unknown> | null = null;
