@@ -61,11 +61,13 @@ export default function HomeGalleryClient({ images }: { images: ImageRecord[] })
               alt={image.title || ''} 
               loading="lazy" 
             />
-            {(image.title || image.description) && (
-              <div className="meta">
-                {image.title || 'View image'}
+            <div className="masonry-overlay">
+              <div>
+                <h4>{image.title || 'Untitled frame'}</h4>
+                {image.description ? <p>{image.description}</p> : null}
               </div>
-            )}
+              <span className="chip subtle">View</span>
+            </div>
           </button>
         ))}
         {images.length === 0 && (
@@ -94,8 +96,14 @@ export default function HomeGalleryClient({ images }: { images: ImageRecord[] })
                 <ChevronRight size={32} />
               </button>
 
-               <div className="lightbox-meta" onClick={(e) => e.stopPropagation()}>
-                <strong>{activeImage.title || 'Untitled'}</strong>
+               <div className="lightbox-meta glass" onClick={(e) => e.stopPropagation()}>
+                <div>
+                  <strong>{activeImage.title || 'Untitled'}</strong>
+                  {activeImage.description ? <div className="muted">{activeImage.description}</div> : null}
+                </div>
+                <a className="button primary" href={`/images/${activeImage.public_id}`} onClick={(e) => e.stopPropagation()}>
+                  View details
+                </a>
               </div>
             </div>
             
