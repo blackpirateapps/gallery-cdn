@@ -50,10 +50,10 @@ export default function HomeGalleryClient({ images }: { images: ImageRecord[] })
 
   return (
     <>
-      <section className="masonry">
+      <section className="justified">
         {images.map((image, index) => (
           <button
-            className="card card-button masonry-item"
+            className="card card-button justified-item"
             key={image.id}
             type="button"
             onClick={() => openAt(index)}
