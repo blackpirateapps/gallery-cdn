@@ -179,6 +179,34 @@ export async function deleteImage(id: number) {
   });
 }
 
+export async function updateImageMeta(
+  id: number,
+  fields: {
+    title?: string | null;
+    description?: string | null;
+    tag?: string | null;
+    location?: string | null;
+    exifJson?: string | null;
+    visibility?: 'public' | 'unlisted' | 'private';
+  }
+) {
+  const db = getDb();
+  await ensureSchema();
+  await db.execute({
+    sql:
+      'UPDATE images SET title = ?, description = ?, tag = ?, location = ?, exif_json = ?, visibility = ? WHERE id = ?',
+    args: [
+      fields.title ?? null,
+      fields.description ?? null,
+      fields.tag ?? null,
+      fields.location ?? null,
+      fields.exifJson ?? null,
+      fields.visibility ?? 'public',
+      id
+    ]
+  });
+}
+
 export async function getImageById(id: number) {
   const db = getDb();
   await ensureSchema();

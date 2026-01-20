@@ -33,6 +33,13 @@ export default function AdminClient() {
   const [exifText, setExifText] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
   const formRef = useRef<HTMLFormElement | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editTag, setEditTag] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editExifText, setEditExifText] = useState('');
+  const [editVisibility, setEditVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
 
   const hasFormData = useMemo(
     () => title || description || tag || location || exifText || visibility !== 'public',
@@ -324,6 +331,74 @@ export default function AdminClient() {
     await loadImages();
   }
 
+  function startEdit(image: ImageRecord) {
+    setEditingId(image.id);
+    setEditTitle(image.title || '');
+    setEditDescription(image.description || '');
+    setEditTag(image.tag || '');
+    setEditLocation(image.location || '');
+    setEditExifText(image.exif_json || '');
+    setEditVisibility(
+      image.visibility === 'private' || image.visibility === 'unlisted' ? image.visibility : 'public'
+    );
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditTitle('');
+    setEditDescription('');
+    setEditTag('');
+    setEditLocation('');
+    setEditExifText('');
+    setEditVisibility('public');
+  }
+
+  async function saveEdit() {
+    if (!editingId) return;
+    let exifPayload: Record<string, unknown> | null = null;
+    if (editExifText) {
+      try {
+        exifPayload = JSON.parse(editExifText);
+      } catch {
+        setStatus('Edit EXIF JSON is invalid.');
+        return;
+      }
+    }
+
+    const response = await fetch(`/api/images/${editingId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: editTitle,
+        description: editDescription,
+        tag: editTag,
+        location: editLocation,
+        exif: exifPayload,
+        visibility: editVisibility
+      })
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setStatus(data.error || 'Update failed.');
+      return;
+    }
+
+    setStatus('Image updated.');
+    cancelEdit();
+    await loadImages();
+  }
+
+  async function handleCopyLink(publicId: string) {
+    const url = `${window.location.origin}/images/${publicId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setStatus('Share link copied.');
+    } catch {
+      setStatus('Unable to copy link.');
+    }
+  }
+
   async function handleLogout() {
     await fetch('/api/logout', { method: 'POST' });
     window.location.href = '/login';
@@ -344,6 +419,12 @@ export default function AdminClient() {
       </aside>
 
       <section className="stack">
+        <div className="panel">
+          <h2 style={{ marginTop: 0 }}>Admin hub</h2>
+          <div className="notice">
+            Upload new images, edit metadata, and share unlisted links. Private images only show for admins.
+          </div>
+        </div>
         <div className="panel">
           <h2 style={{ marginTop: 0 }}>Upload new image</h2>
           <form ref={formRef} className="stack" onSubmit={handleUpload}>
@@ -435,9 +516,17 @@ export default function AdminClient() {
                     <div className="badge">{image.visibility || 'public'}</div>
                   </td>
                   <td>
-                    <button className="button" type="button" onClick={() => handleDelete(image.id)}>
-                      Delete
-                    </button>
+                    <div className="stack" style={{ gap: '8px' }}>
+                      <button className="button" type="button" onClick={() => startEdit(image)}>
+                        Edit
+                      </button>
+                      <button className="button" type="button" onClick={() => handleCopyLink(image.public_id)}>
+                        Copy link
+                      </button>
+                      <button className="button" type="button" onClick={() => handleDelete(image.id)}>
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -445,6 +534,66 @@ export default function AdminClient() {
           </table>
           {images.length === 0 ? <div className="notice">No uploads yet.</div> : null}
         </div>
+
+        {editingId ? (
+          <div className="panel">
+            <h2 style={{ marginTop: 0 }}>Edit image</h2>
+            <div className="stack">
+              <input
+                className="input"
+                type="text"
+                placeholder="Title"
+                value={editTitle}
+                onChange={(event) => setEditTitle(event.target.value)}
+              />
+              <textarea
+                className="input"
+                placeholder="Description"
+                rows={3}
+                value={editDescription}
+                onChange={(event) => setEditDescription(event.target.value)}
+              />
+              <input
+                className="input"
+                type="text"
+                placeholder="Tag"
+                value={editTag}
+                onChange={(event) => setEditTag(event.target.value)}
+              />
+              <input
+                className="input"
+                type="text"
+                placeholder="Location"
+                value={editLocation}
+                onChange={(event) => setEditLocation(event.target.value)}
+              />
+              <textarea
+                className="input"
+                placeholder="EXIF data (JSON)"
+                rows={6}
+                value={editExifText}
+                onChange={(event) => setEditExifText(event.target.value)}
+              />
+              <select
+                className="input"
+                value={editVisibility}
+                onChange={(event) => setEditVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
+              >
+                <option value="public">Public</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="private">Private</option>
+              </select>
+              <div className="stack" style={{ gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <button className="button" type="button" onClick={saveEdit}>
+                  Save changes
+                </button>
+                <button className="button" type="button" onClick={cancelEdit}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
     </div>
   );

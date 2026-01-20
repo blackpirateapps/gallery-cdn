@@ -1,6 +1,11 @@
+import { redirect } from 'next/navigation';
+import { isAuthed } from '@/lib/auth';
 import LoginForm from './LoginForm';
 
 export default function LoginPage() {
+  if (isAuthed()) {
+    redirect('/admin');
+  }
   return (
     <>
       <nav className="nav">
