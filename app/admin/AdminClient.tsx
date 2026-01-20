@@ -12,6 +12,7 @@ type ImageRecord = {
 export default function AdminClient() {
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [status, setStatus] = useState('');
+  const [debugLog, setDebugLog] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
   async function loadImages() {
@@ -33,18 +34,56 @@ export default function AdminClient() {
 
     setUploading(true);
     setStatus('Uploading...');
+    setDebugLog([]);
 
-    const formData = new FormData();
-    formData.append('file', file);
+    const pushDebug = (line: string) => {
+      setDebugLog((prev) => [...prev, line]);
+    };
 
-    const response = await fetch('/api/images', {
+    pushDebug(`Selected file: ${file.name} (${file.type || 'unknown'})`);
+
+    const presignResponse = await fetch('/api/r2-presign', {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name, contentType: file.type })
     });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setStatus(data.error || 'Upload failed.');
+    if (!presignResponse.ok) {
+      const data = await presignResponse.json().catch(() => ({}));
+      setStatus(data.error || 'Failed to get upload URL.');
+      pushDebug(`Presign failed: ${presignResponse.status}`);
+      setUploading(false);
+      return;
+    }
+
+    const presignData = await presignResponse.json();
+    pushDebug('Received signed URL from server.');
+
+    const uploadResponse = await fetch(presignData.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file
+    });
+
+    if (!uploadResponse.ok) {
+      setStatus('Upload to R2 failed.');
+      pushDebug(`R2 upload failed: ${uploadResponse.status}`);
+      setUploading(false);
+      return;
+    }
+
+    pushDebug('Uploaded directly to R2.');
+
+    const recordResponse = await fetch('/api/images/record', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: presignData.key, url: presignData.publicUrl })
+    });
+
+    if (!recordResponse.ok) {
+      const data = await recordResponse.json().catch(() => ({}));
+      setStatus(data.error || 'Failed to save metadata.');
+      pushDebug(`DB record failed: ${recordResponse.status}`);
       setUploading(false);
       return;
     }
@@ -82,6 +121,7 @@ export default function AdminClient() {
           Sign out
         </button>
         <div className="notice">Keep uploads lightweight for faster delivery on the public gallery.</div>
+        <div className="notice">R2 must allow PUT from your domain (CORS) for direct uploads.</div>
       </aside>
 
       <section className="stack">
@@ -98,6 +138,12 @@ export default function AdminClient() {
         <div className="panel">
           <h2 style={{ marginTop: 0 }}>Gallery items</h2>
           {status ? <div className="notice">{status}</div> : null}
+          {debugLog.length ? (
+            <div className="notice">
+              <strong>Debug</strong>
+              <div>{debugLog.join(' | ')}</div>
+            </div>
+          ) : null}
           <table className="table" style={{ marginTop: '12px' }}>
             <thead>
               <tr>
