@@ -348,6 +348,71 @@ main {
   font-size: 13px;
 }
 
+.loading {
+  display: grid;
+  gap: 16px;
+}
+
+.loading-bar,
+.loading-card,
+.loading-tile,
+.loading-line,
+.loading-block,
+.loading-image {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(214, 169, 106, 0.18), rgba(255, 255, 255, 0.04));
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+.loading-bar {
+  height: 18px;
+  width: 160px;
+}
+
+.loading-card {
+  height: 140px;
+}
+
+.loading-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.loading-tile {
+  height: 220px;
+}
+
+.loading-line {
+  height: 18px;
+  width: 100%;
+}
+
+.loading-line.short {
+  width: 60%;
+}
+
+.loading-block {
+  height: 120px;
+}
+
+.loading-image {
+  height: 60vh;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
