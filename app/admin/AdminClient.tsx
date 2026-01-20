@@ -41,6 +41,10 @@ export default function AdminClient() {
   const [editExifText, setEditExifText] = useState('');
   const [editVisibility, setEditVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
 
+  const totalCount = images.length;
+  const privateCount = images.filter((image) => image.visibility === 'private').length;
+  const unlistedCount = images.filter((image) => image.visibility === 'unlisted').length;
+
   const hasFormData = useMemo(
     () => title || description || tag || location || exifText || visibility !== 'public',
     [title, description, tag, location, exifText, visibility]
@@ -419,10 +423,26 @@ export default function AdminClient() {
       </aside>
 
       <section className="stack">
-        <div className="panel">
-          <h2 style={{ marginTop: 0 }}>Admin hub</h2>
-          <div className="notice">
-            Upload new images, edit metadata, and share unlisted links. Private images only show for admins.
+        <div className="panel admin-hero">
+          <div>
+            <h2 style={{ marginTop: 0 }}>Studio console</h2>
+            <p className="muted">
+              Curate your portfolio, manage visibility, and share private links with clients.
+            </p>
+          </div>
+          <div className="admin-metrics">
+            <div>
+              <div className="badge">Total</div>
+              <div>{totalCount}</div>
+            </div>
+            <div>
+              <div className="badge">Unlisted</div>
+              <div>{unlistedCount}</div>
+            </div>
+            <div>
+              <div className="badge">Private</div>
+              <div>{privateCount}</div>
+            </div>
           </div>
         </div>
         <div className="panel">

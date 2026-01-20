@@ -77,6 +77,10 @@ main {
   color: var(--ink);
 }
 
+.muted {
+  color: var(--muted);
+}
+
 .hero {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
@@ -119,6 +123,13 @@ main {
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(15, 15, 15, 0.06);
   display: block;
+}
+
+.card-button {
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
 }
 
 .card img {
@@ -173,6 +184,72 @@ main {
   padding: 12px;
   overflow: auto;
   font-size: 12px;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 50;
+}
+
+.lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 8, 0.75);
+  backdrop-filter: blur(6px);
+}
+
+.lightbox-card {
+  position: relative;
+  z-index: 2;
+  width: min(1100px, 92vw);
+  max-height: 90vh;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+
+.lightbox-image {
+  width: 100%;
+  height: min(70vh, 680px);
+  object-fit: contain;
+  background: #101010;
+}
+
+.lightbox-meta {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lightbox-meta h3 {
+  margin: 0 0 6px;
+}
+
+.lightbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.admin-metrics {
+  display: grid;
+  gap: 10px;
+  text-align: right;
 }
 
 .admin-layout {
@@ -253,5 +330,14 @@ main {
 
   .detail {
     grid-template-columns: 1fr;
+  }
+
+  .admin-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-metrics {
+    text-align: left;
   }
 }

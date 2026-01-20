@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import HomeGalleryClient from './HomeGalleryClient';
 import { listImagesPublic } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -30,20 +30,7 @@ export default async function HomePage() {
               Curated highlights from recent shoots. For bookings and collaborations, reach out directly.
             </div>
           </section>
-          <section className="grid">
-            {images.map((image) => (
-              <Link className="card" key={image.id} href={`/images/${image.public_id}`}>
-                <img src={image.thumb_url || image.url} alt={`Gallery item ${image.id}`} loading="lazy" />
-                <div className="meta">
-                  {image.title ? <strong>{image.title}</strong> : null}
-                  <div>{image.description || new Date(image.created_at).toLocaleDateString()}</div>
-                </div>
-              </Link>
-            ))}
-            {images.length === 0 && (
-              <div className="notice">No images yet. Use the admin dashboard to upload the first set.</div>
-            )}
-          </section>
+          <HomeGalleryClient images={images} />
         </div>
       </main>
     </>
