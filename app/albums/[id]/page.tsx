@@ -37,6 +37,8 @@ export default async function AlbumPage({ params }: { params: { id: string } }) 
 
   const images = await listImagesForAlbum(album.id);
   const visibleImages = isAuthed() ? images : images.filter((image) => image.visibility !== 'private');
+  const coverImage = visibleImages[0];
+  const previewStrip = visibleImages.slice(0, 5);
 
   return (
     <>
@@ -46,13 +48,35 @@ export default async function AlbumPage({ params }: { params: { id: string } }) 
       </nav>
       <main>
         <div className="container">
-          <section className="hero">
-            <div>
-              <h1>{album.title}</h1>
-              <p>{album.description || 'Album collection'}</p>
-              <div className="hero-cta">
-                <span className="badge">{album.tag || 'Album'}</span>
-                <span className="badge">{album.visibility || 'public'}</span>
+          <section className="album-hero">
+            <div className="album-hero-card">
+              <div className="album-hero-art">
+                {coverImage ? (
+                  <img src={coverImage.thumb_url || coverImage.url} alt={coverImage.title || album.title} />
+                ) : (
+                  <div className="album-hero-placeholder">Images will appear here</div>
+                )}
+              </div>
+              <div className="album-hero-content">
+                <span className="eyebrow">Album</span>
+                <h1>{album.title}</h1>
+                <p>{album.description || 'Cohesive frames with the same air, tone, and story.'}</p>
+                <div className="album-hero-meta">
+                  <span className="chip subtle">{album.tag || 'Album'}</span>
+                  <span className="chip subtle">{album.visibility || 'public'}</span>
+                  <span className="chip subtle">{visibleImages.length} images</span>
+                </div>
+                <div className="album-hero-strip">
+                  {previewStrip.length ? (
+                    previewStrip.map((image) => (
+                      <div className="album-strip-thumb" key={image.id}>
+                        <img src={image.thumb_url || image.url} alt={image.title || album.title} />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="album-strip-thumb placeholder">No previews yet</div>
+                  )}
+                </div>
               </div>
             </div>
           </section>

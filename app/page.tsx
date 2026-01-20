@@ -116,27 +116,63 @@ export default async function HomePage() {
 
           {/* Albums: Clean List View */}
           <section className="albums">
-            <div className="section-header">
-              <h2>Collections</h2>
-              <span className="muted">{albums.length} Albums</span>
+            <div className="section-header albums-header">
+              <div>
+                <span className="eyebrow">Collections</span>
+                <h2>Albums</h2>
+                <p className="section-lede">Curated sets with cohesive tones and stories.</p>
+              </div>
+              <div className="album-card-meta">
+                <span className="chip subtle">{albums.length} albums</span>
+                <a className="button ghost" href="#gallery">Jump to archive</a>
+              </div>
             </div>
-            <div className="album-list-view">
-              {albums.map((album, index) => (
-                <a className="album-row-item" key={album.id} href={`/albums/${album.public_id}`}>
-                  <div className="album-info">
-                    <h3>{album.title}</h3>
-                    <p>{album.description || 'No description'}</p>
-                  </div>
-                  <div className="album-preview-thumbs">
-                    {previews[index]?.map((image) => (
-                      <img key={image.id} src={image.thumb_url || image.url} alt="" />
-                    ))}
-                  </div>
-                </a>
-              ))}
-              {albums.length === 0 && (
-                <div className="notice">No albums found.</div>
-              )}
+            <div className="album-showcase-grid">
+              {albums.map((album, index) => {
+                const previewImages = previews[index] || [];
+                const heroImage = previewImages[0];
+                const restImages = previewImages.slice(1, 5);
+                const fillers = Array.from({ length: Math.max(0, 4 - restImages.length) });
+                return (
+                  <a className="album-card" key={album.id} href={`/albums/${album.public_id}`}>
+                    <div className="album-card-media">
+                      {heroImage ? (
+                        <div className="album-thumb primary">
+                          <img src={heroImage.thumb_url || heroImage.url} alt="" />
+                        </div>
+                      ) : (
+                        <div className="album-thumb primary placeholder">
+                          <span>No preview</span>
+                        </div>
+                      )}
+                      {restImages.map((image) => (
+                        <div className="album-thumb" key={image.id}>
+                          <img src={image.thumb_url || image.url} alt="" />
+                        </div>
+                      ))}
+                      {fillers.map((_, fillIndex) => (
+                        <div className="album-thumb placeholder" key={`fill-${album.id}-${fillIndex}`}>
+                          <span>Preview</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="album-card-body">
+                      <h3>{album.title}</h3>
+                      <p>{album.description || 'Story-driven images with gentle color work.'}</p>
+                      <div className="album-card-meta">
+                        <span className="chip subtle">{album.tag || 'Album'}</span>
+                        <span className="chip subtle">{album.visibility || 'public'}</span>
+                        <span className="chip subtle">{previewImages.length || 0} previews</span>
+                      </div>
+                    </div>
+                    <div className="album-card-footer">
+                      <span>View album</span>
+                      <span className="chip subtle">Open</span>
+                    </div>
+                  </a>
+                );
+              })}
+              {albums.length === 0 && <div className="notice">No albums found.</div>}
             </div>
           </section>
 
