@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { listImages } from '@/lib/db';
+import { listImagesPublic } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const images = await listImages();
+  const images = await listImagesPublic();
 
   return (
     <>
@@ -25,7 +25,7 @@ export default async function HomePage() {
           </section>
           <section className="grid">
             {images.map((image) => (
-              <Link className="card" key={image.id} href={`/images/${image.id}`}>
+              <Link className="card" key={image.id} href={`/images/${image.public_id}`}>
                 <img src={image.thumb_url || image.url} alt={`Gallery item ${image.id}`} loading="lazy" />
                 <div className="meta">
                   {image.title ? <strong>{image.title}</strong> : null}

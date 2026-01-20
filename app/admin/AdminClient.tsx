@@ -8,12 +8,14 @@ type ImageRecord = {
   id: number;
   key: string;
   url: string;
+  public_id: string;
   thumb_url: string | null;
   title: string | null;
   description: string | null;
   tag: string | null;
   location: string | null;
   exif_json: string | null;
+  visibility: string | null;
   created_at: number;
 };
 
@@ -29,11 +31,12 @@ export default function AdminClient() {
   const [tag, setTag] = useState('');
   const [location, setLocation] = useState('');
   const [exifText, setExifText] = useState('');
+  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const hasFormData = useMemo(
-    () => title || description || tag || location || exifText,
-    [title, description, tag, location, exifText]
+    () => title || description || tag || location || exifText || visibility !== 'public',
+    [title, description, tag, location, exifText, visibility]
   );
 
   async function loadImages() {
@@ -276,7 +279,8 @@ export default function AdminClient() {
         description,
         tag,
         location,
-        exif: exifPayload
+        exif: exifPayload,
+        visibility
       })
     });
 
@@ -303,6 +307,7 @@ export default function AdminClient() {
     setTag('');
     setLocation('');
     setExifText('');
+    setVisibility('public');
     formRef.current?.reset();
     await loadImages();
     setUploading(false);
@@ -382,12 +387,21 @@ export default function AdminClient() {
               value={exifText}
               onChange={(event) => setExifText(event.target.value)}
             />
+            <select
+              className="input"
+              value={visibility}
+              onChange={(event) => setVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
+            >
+              <option value="public">Public</option>
+              <option value="unlisted">Unlisted</option>
+              <option value="private">Private</option>
+            </select>
             <button className="button" type="submit" disabled={uploading}>
               {uploading ? 'Uploading...' : 'Upload image'}
             </button>
           </form>
           {!selectedFile && !hasFormData ? (
-            <div className="notice">Select an image to preview, auto-fill EXIF data, and add metadata.</div>
+            <div className="notice">Select an image to preview, auto-fill EXIF data, and set visibility.</div>
           ) : null}
         </div>
 
@@ -418,6 +432,7 @@ export default function AdminClient() {
                     <div>{image.title || 'Untitled'}</div>
                     <div className="badge">{image.tag || 'No tag'}</div>
                     <div>{image.location || new Date(image.created_at).toLocaleString()}</div>
+                    <div className="badge">{image.visibility || 'public'}</div>
                   </td>
                   <td>
                     <button className="button" type="button" onClick={() => handleDelete(image.id)}>

@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   const exif = body?.exif;
   const thumbKey = body?.thumbKey;
   const thumbUrl = body?.thumbUrl;
+  const visibility = body?.visibility;
 
   if (!key || !url) {
     return NextResponse.json({ error: 'Missing key or url' }, { status: 400 });
@@ -31,7 +32,8 @@ export async function POST(request: Request) {
     description: description ? String(description) : undefined,
     tag: tag ? String(tag) : undefined,
     location: location ? String(location) : undefined,
-    exifJson: exif ? JSON.stringify(exif) : undefined
+    exifJson: exif ? JSON.stringify(exif) : undefined,
+    visibility: visibility === 'private' || visibility === 'unlisted' ? visibility : 'public'
   });
   return NextResponse.json({ ok: true });
 }

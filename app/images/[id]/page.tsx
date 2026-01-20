@@ -1,16 +1,21 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getImageById } from '@/lib/db';
+import { isAuthed } from '@/lib/auth';
+import { getImageByPublicId } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ImageDetailPage({ params }: { params: { id: string } }) {
-  const id = Number(params.id);
-  if (!Number.isFinite(id)) {
+  const publicId = params.id;
+  if (!publicId) {
     notFound();
   }
-  const image = await getImageById(id);
+  const image = await getImageByPublicId(publicId);
   if (!image) {
+    notFound();
+  }
+
+  if (image.visibility === 'private' && !isAuthed()) {
     notFound();
   }
 
@@ -43,6 +48,10 @@ export default async function ImageDetailPage({ params }: { params: { id: string
               <div>
                 <div className="badge">Location</div>
                 <div>{image.location || '—'}</div>
+              </div>
+              <div>
+                <div className="badge">Visibility</div>
+                <div>{image.visibility || 'public'}</div>
               </div>
               <div>
                 <div className="badge">Uploaded</div>

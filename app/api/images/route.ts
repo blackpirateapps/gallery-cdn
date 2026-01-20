@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { isAuthed } from '@/lib/auth';
-import { insertImage, listImages } from '@/lib/db';
+import { insertImage, listImagesAll } from '@/lib/db';
 import { getPublicUrl, uploadImage } from '@/lib/r2';
 
 export async function GET() {
-  const images = await listImages();
+  const images = await listImagesAll();
   return NextResponse.json({ images });
 }
 
