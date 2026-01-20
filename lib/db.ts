@@ -256,7 +256,7 @@ export async function listFeaturedPublic() {
   const db = getDb();
   await ensureSchema();
   const result = await db.execute(
-    "SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, featured, visibility, created_at FROM images WHERE visibility = 'public' AND (featured = 1 OR featured = '1' OR featured = 'true') ORDER BY created_at DESC"
+    "SELECT id, key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, featured, visibility, created_at FROM images WHERE LOWER(COALESCE(visibility, '')) = 'public' AND (CAST(featured AS REAL) >= 1 OR LOWER(featured) = 'true') ORDER BY created_at DESC"
   );
   return result.rows.map((row) => ({
     id: Number(row.id),
