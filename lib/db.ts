@@ -24,7 +24,12 @@ export type ImageRecord = {
 export async function listImages() {
   const db = getDb();
   const result = await db.execute('SELECT id, key, url, created_at FROM images ORDER BY created_at DESC');
-  return result.rows as ImageRecord[];
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    key: String(row.key),
+    url: String(row.url),
+    created_at: Number(row.created_at)
+  }));
 }
 
 export async function insertImage(key: string, url: string) {
@@ -50,5 +55,12 @@ export async function getImageById(id: number) {
     sql: 'SELECT id, key, url, created_at FROM images WHERE id = ?',
     args: [id]
   });
-  return result.rows[0] as ImageRecord | undefined;
+  const row = result.rows[0];
+  if (!row) return undefined;
+  return {
+    id: Number(row.id),
+    key: String(row.key),
+    url: String(row.url),
+    created_at: Number(row.created_at)
+  };
 }
