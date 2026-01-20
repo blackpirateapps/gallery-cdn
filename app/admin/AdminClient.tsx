@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import imageCompression from 'browser-image-compression';
 import * as exifr from 'exifr';
 
 type ImageRecord = {
@@ -65,42 +66,31 @@ export default function AdminClient() {
     }
   };
 
-  const encodeBitmap = async (bitmap: ImageBitmap, width: number, height: number, type: string) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('Canvas not supported');
-    }
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (result) => {
-          if (result) resolve(result);
-          else reject(new Error('Failed to encode image'));
-        },
-        type,
-        0.9
-      );
-    });
-    return blob;
+  const ensureFile = (blob: Blob, name: string, type: string) => {
+    return new File([blob], name, { type: blob.type || type });
   };
 
   const buildUploadFiles = async (file: File) => {
-    const bitmap = await createImageBitmap(file);
     const targetType = file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg';
-    const fullBlob = await encodeBitmap(bitmap, bitmap.width, bitmap.height, targetType);
+    const fullBlob = await imageCompression(file, {
+      maxSizeMB: 50,
+      maxWidthOrHeight: 6000,
+      useWebWorker: true,
+      fileType: targetType,
+      preserveExif: false
+    });
 
-    const maxSize = 520;
-    const ratio = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
-    const thumbWidth = Math.round(bitmap.width * ratio);
-    const thumbHeight = Math.round(bitmap.height * ratio);
-    const thumbBlob = await encodeBitmap(bitmap, thumbWidth, thumbHeight, targetType);
+    const thumbBlob = await imageCompression(file, {
+      maxSizeMB: 0.3,
+      maxWidthOrHeight: 520,
+      useWebWorker: true,
+      fileType: targetType,
+      preserveExif: false
+    });
 
     return {
-      full: new File([fullBlob], file.name, { type: fullBlob.type || targetType }),
-      thumb: new File([thumbBlob], `thumb-${file.name}`, { type: thumbBlob.type || targetType })
+      full: ensureFile(fullBlob, file.name, targetType),
+      thumb: ensureFile(thumbBlob, `thumb-${file.name}`, targetType)
     };
   };
 
@@ -164,7 +154,7 @@ export default function AdminClient() {
     if (!selectedFile) return;
 
     setUploading(true);
-    setStatus('Uploading...');
+    setStatus('Compressing...');
     setDebugLog([]);
     pushDebug(`Selected file: ${selectedFile.name} (${selectedFile.type || 'unknown'})`);
 
@@ -178,6 +168,9 @@ export default function AdminClient() {
     } catch (error) {
       pushDebug('Failed to process images, uploading original file.');
     }
+
+    setStatus('Uploading...');
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     const presignResponse = await fetch('/api/r2-presign', {
       method: 'POST',
