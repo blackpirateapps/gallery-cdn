@@ -82,6 +82,7 @@ export default function AdminClient() {
   const [albumTitle, setAlbumTitle] = useState('');
   const [albumDescription, setAlbumDescription] = useState('');
   const [albumTag, setAlbumTag] = useState('');
+  const [albumPublicId, setAlbumPublicId] = useState('');
   const [albumVisibility, setAlbumVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
   const [editingAlbumId, setEditingAlbumId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -456,6 +457,7 @@ export default function AdminClient() {
           title: albumTitle,
           description: albumDescription,
           tag: albumTag,
+          publicId: albumPublicId || null,
           visibility: albumVisibility
         })
       });
@@ -472,6 +474,7 @@ export default function AdminClient() {
           title: albumTitle,
           description: albumDescription,
           tag: albumTag,
+          publicId: albumPublicId || null,
           visibility: albumVisibility
         })
       });
@@ -485,6 +488,7 @@ export default function AdminClient() {
     setAlbumTitle('');
     setAlbumDescription('');
     setAlbumTag('');
+    setAlbumPublicId('');
     setAlbumVisibility('public');
     setEditingAlbumId(null);
     await loadAlbums();
@@ -495,6 +499,7 @@ export default function AdminClient() {
     setAlbumTitle(album.title);
     setAlbumDescription(album.description || '');
     setAlbumTag(album.tag || '');
+    setAlbumPublicId(album.public_id || '');
     setAlbumVisibility(
       album.visibility === 'private' || album.visibility === 'unlisted' ? album.visibility : 'public'
     );
@@ -527,6 +532,10 @@ export default function AdminClient() {
     }
     setStatus('Images added to album.');
     setSelectedIds([]);
+  }
+
+  function sanitizePublicId(value: string) {
+    return value.trim().replace(/\s+/g, '-');
   }
 
   function startEdit(image: ImageRecord) {
@@ -899,6 +908,13 @@ export default function AdminClient() {
               value={albumTitle}
               onChange={(event) => setAlbumTitle(event.target.value)}
               required
+            />
+            <input
+              className="input"
+              type="text"
+              placeholder="Album URL id (optional)"
+              value={albumPublicId}
+              onChange={(event) => setAlbumPublicId(sanitizePublicId(event.target.value))}
             />
             <textarea
               className="input"

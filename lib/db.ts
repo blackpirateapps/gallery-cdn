@@ -473,12 +473,13 @@ export async function createAlbum(options: {
   title: string;
   description?: string;
   tag?: string;
+  publicId?: string;
   visibility?: 'public' | 'unlisted' | 'private';
 }) {
   const db = getDb();
   await ensureSchema();
   const createdAt = Date.now();
-  const publicId = crypto.randomUUID();
+  const publicId = options.publicId ?? crypto.randomUUID();
   const visibility = options.visibility ?? 'public';
   const result = await db.execute({
     sql: 'INSERT INTO albums (public_id, title, description, tag, visibility, created_at) VALUES (?, ?, ?, ?, ?, ?)',
@@ -494,17 +495,19 @@ export async function updateAlbum(
     title?: string | null;
     description?: string | null;
     tag?: string | null;
+    publicId?: string | null;
     visibility?: 'public' | 'unlisted' | 'private';
   }
 ) {
   const db = getDb();
   await ensureSchema();
   await db.execute({
-    sql: 'UPDATE albums SET title = ?, description = ?, tag = ?, visibility = ? WHERE id = ?',
+    sql: 'UPDATE albums SET title = ?, description = ?, tag = ?, public_id = ?, visibility = ? WHERE id = ?',
     args: [
       fields.title ?? null,
       fields.description ?? null,
       fields.tag ?? null,
+      fields.publicId ?? null,
       fields.visibility ?? 'public',
       id
     ]

@@ -16,11 +16,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   const visibility = body?.visibility;
   const allowedVisibility =
     visibility === 'private' || visibility === 'unlisted' || visibility === 'public' ? visibility : 'public';
+  const publicId = body?.publicId;
+  if (publicId && typeof publicId !== 'string') {
+    return NextResponse.json({ error: 'Invalid public id' }, { status: 400 });
+  }
 
   await updateAlbum(id, {
     title: body?.title ?? null,
     description: body?.description ?? null,
     tag: body?.tag ?? null,
+    publicId: publicId ? String(publicId) : null,
     visibility: allowedVisibility
   });
 

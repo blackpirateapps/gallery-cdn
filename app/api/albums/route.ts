@@ -21,6 +21,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing title' }, { status: 400 });
   }
 
+  const publicId = body?.publicId;
+  if (publicId && typeof publicId !== 'string') {
+    return NextResponse.json({ error: 'Invalid public id' }, { status: 400 });
+  }
+
   const visibility = body?.visibility;
   const allowedVisibility =
     visibility === 'private' || visibility === 'unlisted' || visibility === 'public' ? visibility : 'public';
@@ -29,6 +34,7 @@ export async function POST(request: Request) {
     title,
     description: body?.description ? String(body.description) : undefined,
     tag: body?.tag ? String(body.tag) : undefined,
+    publicId: publicId ? String(publicId) : undefined,
     visibility: allowedVisibility
   });
 
