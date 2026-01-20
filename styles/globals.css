@@ -328,6 +328,53 @@ main {
   text-align: right;
 }
 
+.album-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.album-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+}
+
+.album-card h3 {
+  margin: 0;
+}
+
+.album-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.album-list {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.album-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(16, 16, 16, 0.6);
+}
+
 .upload-panel {
   background: linear-gradient(135deg, rgba(214, 169, 106, 0.08), rgba(24, 22, 20, 0.9));
 }
@@ -461,6 +508,20 @@ select.input {
   font-size: 14px;
 }
 
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.table-tools {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .table th,
 .table td {
   text-align: left;
@@ -585,12 +646,23 @@ select.input {
     text-align: left;
   }
 
+  .table-tools {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .upload-grid {
     grid-template-columns: 1fr;
   }
 
   .upload-inline {
     grid-template-columns: 1fr;
+  }
+
+  .album-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

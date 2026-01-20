@@ -28,8 +28,19 @@ type ImageRecord = {
   created_at: number;
 };
 
+type AlbumRecord = {
+  id: number;
+  public_id: string;
+  title: string;
+  description: string | null;
+  tag: string | null;
+  visibility: string | null;
+  created_at: number;
+};
+
 export default function AdminClient() {
   const [images, setImages] = useState<ImageRecord[]>([]);
+  const [albums, setAlbums] = useState<AlbumRecord[]>([]);
   const [status, setStatus] = useState('');
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -50,6 +61,7 @@ export default function AdminClient() {
   const [exifLat, setExifLat] = useState('');
   const [exifLng, setExifLng] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [albumId, setAlbumId] = useState<number | ''>('');
   const formRef = useRef<HTMLFormElement | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -67,6 +79,13 @@ export default function AdminClient() {
   const [editExifLat, setEditExifLat] = useState('');
   const [editExifLng, setEditExifLng] = useState('');
   const [editVisibility, setEditVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [albumTitle, setAlbumTitle] = useState('');
+  const [albumDescription, setAlbumDescription] = useState('');
+  const [albumTag, setAlbumTag] = useState('');
+  const [albumVisibility, setAlbumVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [editingAlbumId, setEditingAlbumId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [batchAlbumId, setBatchAlbumId] = useState<number | ''>('');
 
   const totalCount = images.length;
   const privateCount = images.filter((image) => image.visibility === 'private').length;
@@ -114,8 +133,15 @@ export default function AdminClient() {
     setImages(data.images || []);
   }
 
+  async function loadAlbums() {
+    const response = await fetch('/api/albums');
+    const data = await response.json();
+    setAlbums(data.albums || []);
+  }
+
   useEffect(() => {
     loadImages().catch(() => setStatus('Failed to load images.'));
+    loadAlbums().catch(() => setStatus('Failed to load albums.'));
   }, []);
 
   useEffect(() => {
@@ -363,7 +389,8 @@ export default function AdminClient() {
         exifTakenAt,
         exifLat,
         exifLng,
-        visibility
+        visibility,
+        albumId: albumId === '' ? null : albumId
       })
     });
 
@@ -400,6 +427,7 @@ export default function AdminClient() {
     setExifLat('');
     setExifLng('');
     setVisibility('public');
+    setAlbumId('');
     formRef.current?.reset();
     await loadImages();
     setUploading(false);
@@ -414,6 +442,91 @@ export default function AdminClient() {
     }
     setStatus('Image removed.');
     await loadImages();
+  }
+
+  async function handleAlbumSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!albumTitle.trim()) return;
+
+    if (editingAlbumId) {
+      const response = await fetch(`/api/albums/${editingAlbumId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: albumTitle,
+          description: albumDescription,
+          tag: albumTag,
+          visibility: albumVisibility
+        })
+      });
+      if (!response.ok) {
+        setStatus('Failed to update album.');
+        return;
+      }
+      setStatus('Album updated.');
+    } else {
+      const response = await fetch('/api/albums', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: albumTitle,
+          description: albumDescription,
+          tag: albumTag,
+          visibility: albumVisibility
+        })
+      });
+      if (!response.ok) {
+        setStatus('Failed to create album.');
+        return;
+      }
+      setStatus('Album created.');
+    }
+
+    setAlbumTitle('');
+    setAlbumDescription('');
+    setAlbumTag('');
+    setAlbumVisibility('public');
+    setEditingAlbumId(null);
+    await loadAlbums();
+  }
+
+  function startAlbumEdit(album: AlbumRecord) {
+    setEditingAlbumId(album.id);
+    setAlbumTitle(album.title);
+    setAlbumDescription(album.description || '');
+    setAlbumTag(album.tag || '');
+    setAlbumVisibility(
+      album.visibility === 'private' || album.visibility === 'unlisted' ? album.visibility : 'public'
+    );
+  }
+
+  async function deleteAlbum(id: number) {
+    const response = await fetch(`/api/albums/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      setStatus('Failed to delete album.');
+      return;
+    }
+    setStatus('Album deleted.');
+    await loadAlbums();
+  }
+
+  function toggleSelect(id: number) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  }
+
+  async function assignBatch() {
+    if (batchAlbumId === '' || selectedIds.length === 0) return;
+    const response = await fetch('/api/albums/assign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ albumId: batchAlbumId, imageIds: selectedIds })
+    });
+    if (!response.ok) {
+      setStatus('Batch assign failed.');
+      return;
+    }
+    setStatus('Images added to album.');
+    setSelectedIds([]);
   }
 
   function startEdit(image: ImageRecord) {
@@ -681,6 +794,18 @@ export default function AdminClient() {
                   {uploading ? 'Uploading...' : 'Upload image'}
                 </button>
               </div>
+              <select
+                className="input"
+                value={albumId}
+                onChange={(event) => setAlbumId(event.target.value ? Number(event.target.value) : '')}
+              >
+                <option value="">No album</option>
+                {albums.map((album) => (
+                  <option key={album.id} value={album.id}>
+                    {album.title}
+                  </option>
+                ))}
+              </select>
             </div>
           </form>
           {!selectedFile && !hasFormData ? (
@@ -689,7 +814,26 @@ export default function AdminClient() {
         </div>
 
         <div className="panel">
-          <h2 style={{ marginTop: 0 }}>Gallery items</h2>
+          <div className="table-header">
+            <h2 style={{ marginTop: 0 }}>Gallery items</h2>
+            <div className="table-tools">
+              <select
+                className="input"
+                value={batchAlbumId}
+                onChange={(event) => setBatchAlbumId(event.target.value ? Number(event.target.value) : '')}
+              >
+                <option value="">Add selected to album</option>
+                {albums.map((album) => (
+                  <option key={album.id} value={album.id}>
+                    {album.title}
+                  </option>
+                ))}
+              </select>
+              <button className="button ghost" type="button" onClick={assignBatch} disabled={!selectedIds.length}>
+                Add
+              </button>
+            </div>
+          </div>
           {status ? <div className="notice">{status}</div> : null}
           {debugLog.length ? (
             <div className="notice">
@@ -700,6 +844,7 @@ export default function AdminClient() {
           <table className="table" style={{ marginTop: '12px' }}>
             <thead>
               <tr>
+                <th />
                 <th>Preview</th>
                 <th>Details</th>
                 <th>Actions</th>
@@ -708,6 +853,13 @@ export default function AdminClient() {
             <tbody>
               {images.map((image) => (
                 <tr key={image.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(image.id)}
+                      onChange={() => toggleSelect(image.id)}
+                    />
+                  </td>
                   <td>
                     <img src={image.thumb_url || image.url} alt="" style={{ width: '90px', borderRadius: '10px' }} />
                   </td>
@@ -735,6 +887,68 @@ export default function AdminClient() {
             </tbody>
           </table>
           {images.length === 0 ? <div className="notice">No uploads yet.</div> : null}
+        </div>
+
+        <div className="panel">
+          <h2 style={{ marginTop: 0 }}>{editingAlbumId ? 'Edit album' : 'Create album'}</h2>
+          <form className="stack" onSubmit={handleAlbumSubmit}>
+            <input
+              className="input"
+              type="text"
+              placeholder="Album title"
+              value={albumTitle}
+              onChange={(event) => setAlbumTitle(event.target.value)}
+              required
+            />
+            <textarea
+              className="input"
+              placeholder="Album description"
+              rows={3}
+              value={albumDescription}
+              onChange={(event) => setAlbumDescription(event.target.value)}
+            />
+            <div className="upload-inline">
+              <input
+                className="input"
+                type="text"
+                placeholder="Tag"
+                value={albumTag}
+                onChange={(event) => setAlbumTag(event.target.value)}
+              />
+              <select
+                className="input"
+                value={albumVisibility}
+                onChange={(event) => setAlbumVisibility(event.target.value as 'public' | 'unlisted' | 'private')}
+              >
+                <option value="public">Public</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+            <button className="button primary" type="submit">
+              {editingAlbumId ? 'Save album' : 'Create album'}
+            </button>
+          </form>
+          <div className="album-list">
+            {albums.map((album) => (
+              <div key={album.id} className="album-row">
+                <div>
+                  <div className="badge">{album.visibility || 'public'}</div>
+                  <div>{album.title}</div>
+                  <div className="muted">{album.description || 'No description'}</div>
+                </div>
+                <div className="stack" style={{ gap: '8px' }}>
+                  <button className="button ghost" type="button" onClick={() => startAlbumEdit(album)}>
+                    Edit
+                  </button>
+                  <button className="button" type="button" onClick={() => deleteAlbum(album.id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+            {albums.length === 0 ? <div className="notice">No albums created yet.</div> : null}
+          </div>
         </div>
 
         {editingId ? (

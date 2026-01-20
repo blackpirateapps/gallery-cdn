@@ -22,3 +22,20 @@ CREATE TABLE IF NOT EXISTS images (
   visibility TEXT,
   created_at INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS albums (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  public_id TEXT,
+  title TEXT NOT NULL,
+  description TEXT,
+  tag TEXT,
+  visibility TEXT,
+  created_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS album_images (
+  album_id INTEGER NOT NULL,
+  image_id INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (album_id, image_id)
+);

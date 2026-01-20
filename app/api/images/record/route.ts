@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAuthed } from '@/lib/auth';
-import { insertImage } from '@/lib/db';
+import { addImagesToAlbum, insertImage } from '@/lib/db';
 
 export async function POST(request: Request) {
   if (!isAuthed()) {
@@ -27,12 +27,13 @@ export async function POST(request: Request) {
   const thumbKey = body?.thumbKey;
   const thumbUrl = body?.thumbUrl;
   const visibility = body?.visibility;
+  const albumId = body?.albumId;
 
   if (!key || !url) {
     return NextResponse.json({ error: 'Missing key or url' }, { status: 400 });
   }
 
-  await insertImage({
+  const imageId = await insertImage({
     key: String(key),
     url: String(url),
     thumbKey: thumbKey ? String(thumbKey) : undefined,
@@ -53,5 +54,12 @@ export async function POST(request: Request) {
     exifLng: exifLng ? String(exifLng) : undefined,
     visibility: visibility === 'private' || visibility === 'unlisted' ? visibility : 'public'
   });
+
+  if (albumId !== null && albumId !== undefined && albumId !== '') {
+    const parsedAlbumId = Number(albumId);
+    if (Number.isFinite(parsedAlbumId)) {
+      await addImagesToAlbum(parsedAlbumId, [imageId]);
+    }
+  }
   return NextResponse.json({ ok: true });
 }

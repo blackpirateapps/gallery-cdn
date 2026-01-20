@@ -32,6 +32,23 @@ async function ensureSchema() {
     created_at INTEGER NOT NULL
   )`);
 
+  await db.execute(`CREATE TABLE IF NOT EXISTS albums (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    public_id TEXT,
+    title TEXT NOT NULL,
+    description TEXT,
+    tag TEXT,
+    visibility TEXT,
+    created_at INTEGER NOT NULL
+  )`);
+
+  await db.execute(`CREATE TABLE IF NOT EXISTS album_images (
+    album_id INTEGER NOT NULL,
+    image_id INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY (album_id, image_id)
+  )`);
+
   const result = await db.execute('PRAGMA table_info(images)');
   const existing = new Set(result.rows.map((row) => String(row.name)));
   const columns = [
@@ -79,6 +96,38 @@ async function ensureSchema() {
   for (const row of missingVisibility.rows) {
     await db.execute({
       sql: 'UPDATE images SET visibility = ? WHERE id = ?',
+      args: ['public', row.id]
+    });
+  }
+
+  const albumResult = await db.execute('PRAGMA table_info(albums)');
+  const albumExisting = new Set(albumResult.rows.map((row) => String(row.name)));
+  const albumColumns = ['public_id', 'description', 'tag', 'visibility'];
+  for (const column of albumColumns) {
+    if (!albumExisting.has(column)) {
+      await db.execute(`ALTER TABLE albums ADD COLUMN ${column} TEXT`);
+    }
+  }
+  if (!albumExisting.has('created_at')) {
+    await db.execute('ALTER TABLE albums ADD COLUMN created_at INTEGER');
+  }
+
+  const missingAlbumPublicIds = await db.execute(
+    "SELECT id FROM albums WHERE public_id IS NULL OR public_id = ''"
+  );
+  for (const row of missingAlbumPublicIds.rows) {
+    await db.execute({
+      sql: 'UPDATE albums SET public_id = ? WHERE id = ?',
+      args: [crypto.randomUUID(), row.id]
+    });
+  }
+
+  const missingAlbumVisibility = await db.execute(
+    "SELECT id FROM albums WHERE visibility IS NULL OR visibility = ''"
+  );
+  for (const row of missingAlbumVisibility.rows) {
+    await db.execute({
+      sql: 'UPDATE albums SET visibility = ? WHERE id = ?',
       args: ['public', row.id]
     });
   }
@@ -214,7 +263,7 @@ export async function insertImage(options: {
   const createdAt = Date.now();
   const publicId = options.publicId ?? crypto.randomUUID();
   const visibility = options.visibility ?? 'public';
-  await db.execute({
+  const result = await db.execute({
     sql:
       'INSERT INTO images (key, url, public_id, thumb_key, thumb_url, title, description, tag, location, exif_make, exif_model, exif_lens, exif_fnumber, exif_exposure, exif_iso, exif_focal, exif_taken_at, exif_lat, exif_lng, visibility, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     args: [
@@ -241,11 +290,17 @@ export async function insertImage(options: {
       createdAt
     ]
   });
+  const id = Number(result.lastInsertRowid ?? 0);
+  return id;
 }
 
 export async function deleteImage(id: number) {
   const db = getDb();
   await ensureSchema();
+  await db.execute({
+    sql: 'DELETE FROM album_images WHERE image_id = ?',
+    args: [id]
+  });
   await db.execute({
     sql: 'DELETE FROM images WHERE id = ?',
     args: [id]
@@ -368,4 +423,172 @@ export async function getImageByPublicId(publicId: string) {
     visibility: row.visibility ? String(row.visibility) : null,
     created_at: Number(row.created_at)
   };
+}
+
+export type AlbumRecord = {
+  id: number;
+  public_id: string;
+  title: string;
+  description: string | null;
+  tag: string | null;
+  visibility: string | null;
+  created_at: number;
+};
+
+export async function listAlbumsAll() {
+  const db = getDb();
+  await ensureSchema();
+  const result = await db.execute(
+    'SELECT id, public_id, title, description, tag, visibility, created_at FROM albums ORDER BY created_at DESC'
+  );
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    public_id: String(row.public_id),
+    title: String(row.title),
+    description: row.description ? String(row.description) : null,
+    tag: row.tag ? String(row.tag) : null,
+    visibility: row.visibility ? String(row.visibility) : null,
+    created_at: Number(row.created_at)
+  }));
+}
+
+export async function listAlbumsPublic() {
+  const db = getDb();
+  await ensureSchema();
+  const result = await db.execute(
+    "SELECT id, public_id, title, description, tag, visibility, created_at FROM albums WHERE visibility = 'public' ORDER BY created_at DESC"
+  );
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    public_id: String(row.public_id),
+    title: String(row.title),
+    description: row.description ? String(row.description) : null,
+    tag: row.tag ? String(row.tag) : null,
+    visibility: row.visibility ? String(row.visibility) : null,
+    created_at: Number(row.created_at)
+  }));
+}
+
+export async function createAlbum(options: {
+  title: string;
+  description?: string;
+  tag?: string;
+  visibility?: 'public' | 'unlisted' | 'private';
+}) {
+  const db = getDb();
+  await ensureSchema();
+  const createdAt = Date.now();
+  const publicId = crypto.randomUUID();
+  const visibility = options.visibility ?? 'public';
+  const result = await db.execute({
+    sql: 'INSERT INTO albums (public_id, title, description, tag, visibility, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    args: [publicId, options.title, options.description ?? null, options.tag ?? null, visibility, createdAt]
+  });
+  const id = Number(result.lastInsertRowid ?? 0);
+  return { id, publicId };
+}
+
+export async function updateAlbum(
+  id: number,
+  fields: {
+    title?: string | null;
+    description?: string | null;
+    tag?: string | null;
+    visibility?: 'public' | 'unlisted' | 'private';
+  }
+) {
+  const db = getDb();
+  await ensureSchema();
+  await db.execute({
+    sql: 'UPDATE albums SET title = ?, description = ?, tag = ?, visibility = ? WHERE id = ?',
+    args: [
+      fields.title ?? null,
+      fields.description ?? null,
+      fields.tag ?? null,
+      fields.visibility ?? 'public',
+      id
+    ]
+  });
+}
+
+export async function deleteAlbum(id: number) {
+  const db = getDb();
+  await ensureSchema();
+  await db.execute({ sql: 'DELETE FROM album_images WHERE album_id = ?', args: [id] });
+  await db.execute({ sql: 'DELETE FROM albums WHERE id = ?', args: [id] });
+}
+
+export async function addImagesToAlbum(albumId: number, imageIds: number[]) {
+  const db = getDb();
+  await ensureSchema();
+  const createdAt = Date.now();
+  for (const imageId of imageIds) {
+    await db.execute({
+      sql: 'INSERT OR IGNORE INTO album_images (album_id, image_id, created_at) VALUES (?, ?, ?)',
+      args: [albumId, imageId, createdAt]
+    });
+  }
+}
+
+export async function removeImageFromAlbum(albumId: number, imageId: number) {
+  const db = getDb();
+  await ensureSchema();
+  await db.execute({
+    sql: 'DELETE FROM album_images WHERE album_id = ? AND image_id = ?',
+    args: [albumId, imageId]
+  });
+}
+
+export async function getAlbumByPublicId(publicId: string) {
+  const db = getDb();
+  await ensureSchema();
+  const result = await db.execute({
+    sql: 'SELECT id, public_id, title, description, tag, visibility, created_at FROM albums WHERE public_id = ?',
+    args: [publicId]
+  });
+  const row = result.rows[0];
+  if (!row) return undefined;
+  return {
+    id: Number(row.id),
+    public_id: String(row.public_id),
+    title: String(row.title),
+    description: row.description ? String(row.description) : null,
+    tag: row.tag ? String(row.tag) : null,
+    visibility: row.visibility ? String(row.visibility) : null,
+    created_at: Number(row.created_at)
+  };
+}
+
+export async function listImagesForAlbum(albumId: number) {
+  const db = getDb();
+  await ensureSchema();
+  const result = await db.execute({
+    sql:
+      'SELECT images.id, images.key, images.url, images.public_id, images.thumb_key, images.thumb_url, images.title, images.description, images.tag, images.location, images.exif_make, images.exif_model, images.exif_lens, images.exif_fnumber, images.exif_exposure, images.exif_iso, images.exif_focal, images.exif_taken_at, images.exif_lat, images.exif_lng, images.visibility, images.created_at FROM images INNER JOIN album_images ON album_images.image_id = images.id WHERE album_images.album_id = ? ORDER BY images.created_at DESC',
+    args: [albumId]
+  });
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    key: String(row.key),
+    url: String(row.url),
+    public_id: String(row.public_id),
+    thumb_key: row.thumb_key ? String(row.thumb_key) : null,
+    thumb_url: row.thumb_url ? String(row.thumb_url) : null,
+    title: row.title ? String(row.title) : null,
+    description: row.description ? String(row.description) : null,
+    tag: row.tag ? String(row.tag) : null,
+    location: row.location ? String(row.location) : null,
+    exif_make: row.exif_make ? String(row.exif_make) : null,
+    exif_model: row.exif_model ? String(row.exif_model) : null,
+    exif_lens: row.exif_lens ? String(row.exif_lens) : null,
+    exif_fnumber: row.exif_fnumber ? String(row.exif_fnumber) : null,
+    exif_exposure: row.exif_exposure ? String(row.exif_exposure) : null,
+    exif_iso: row.exif_iso ? String(row.exif_iso) : null,
+    exif_focal: row.exif_focal ? String(row.exif_focal) : null,
+    exif_taken_at: row.exif_taken_at ? String(row.exif_taken_at) : null,
+    exif_lat: row.exif_lat ? String(row.exif_lat) : null,
+    exif_lng: row.exif_lng ? String(row.exif_lng) : null,
+    visibility: row.visibility ? String(row.visibility) : null,
+    created_at: Number(row.created_at)
+  }));
 }

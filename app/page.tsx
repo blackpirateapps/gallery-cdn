@@ -1,10 +1,10 @@
 import HomeGalleryClient from './HomeGalleryClient';
-import { listImagesPublic } from '@/lib/db';
+import { listAlbumsPublic, listImagesPublic } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const images = await listImagesPublic();
+  const [albums, images] = await Promise.all([listAlbumsPublic(), listImagesPublic()]);
 
   return (
     <>
@@ -29,6 +29,18 @@ export default async function HomePage() {
             <div className="notice">
               Curated highlights from recent shoots. For bookings and collaborations, reach out directly.
             </div>
+          </section>
+          <section className="album-grid">
+            {albums.map((album) => (
+              <a className="album-card" key={album.id} href={`/albums/${album.public_id}`}>
+                <div className="album-badge">{album.tag || 'Album'}</div>
+                <h3>{album.title}</h3>
+                <p>{album.description || 'View album'}</p>
+              </a>
+            ))}
+            {albums.length === 0 && (
+              <div className="notice">No public albums yet. Create one from the admin dashboard.</div>
+            )}
           </section>
           <HomeGalleryClient images={images} />
         </div>
