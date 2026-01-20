@@ -9,7 +9,16 @@ CREATE TABLE IF NOT EXISTS images (
   description TEXT,
   tag TEXT,
   location TEXT,
-  exif_json TEXT,
+  exif_make TEXT,
+  exif_model TEXT,
+  exif_lens TEXT,
+  exif_fnumber TEXT,
+  exif_exposure TEXT,
+  exif_iso TEXT,
+  exif_focal TEXT,
+  exif_taken_at TEXT,
+  exif_lat TEXT,
+  exif_lng TEXT,
   visibility TEXT,
   created_at INTEGER NOT NULL
 );

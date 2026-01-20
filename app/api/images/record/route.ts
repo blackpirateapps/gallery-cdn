@@ -14,7 +14,16 @@ export async function POST(request: Request) {
   const description = body?.description;
   const tag = body?.tag;
   const location = body?.location;
-  const exif = body?.exif;
+  const exifMake = body?.exifMake;
+  const exifModel = body?.exifModel;
+  const exifLens = body?.exifLens;
+  const exifFNumber = body?.exifFNumber;
+  const exifExposure = body?.exifExposure;
+  const exifIso = body?.exifIso;
+  const exifFocal = body?.exifFocal;
+  const exifTakenAt = body?.exifTakenAt;
+  const exifLat = body?.exifLat;
+  const exifLng = body?.exifLng;
   const thumbKey = body?.thumbKey;
   const thumbUrl = body?.thumbUrl;
   const visibility = body?.visibility;
@@ -32,7 +41,16 @@ export async function POST(request: Request) {
     description: description ? String(description) : undefined,
     tag: tag ? String(tag) : undefined,
     location: location ? String(location) : undefined,
-    exifJson: exif ? JSON.stringify(exif) : undefined,
+    exifMake: exifMake ? String(exifMake) : undefined,
+    exifModel: exifModel ? String(exifModel) : undefined,
+    exifLens: exifLens ? String(exifLens) : undefined,
+    exifFNumber: exifFNumber ? String(exifFNumber) : undefined,
+    exifExposure: exifExposure ? String(exifExposure) : undefined,
+    exifIso: exifIso ? String(exifIso) : undefined,
+    exifFocal: exifFocal ? String(exifFocal) : undefined,
+    exifTakenAt: exifTakenAt ? String(exifTakenAt) : undefined,
+    exifLat: exifLat ? String(exifLat) : undefined,
+    exifLng: exifLng ? String(exifLng) : undefined,
     visibility: visibility === 'private' || visibility === 'unlisted' ? visibility : 'public'
   });
   return NextResponse.json({ ok: true });

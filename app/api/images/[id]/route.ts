@@ -47,7 +47,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     description: body?.description ?? null,
     tag: body?.tag ?? null,
     location: body?.location ?? null,
-    exifJson: body?.exif ? JSON.stringify(body.exif) : null,
+    exifMake: body?.exifMake ?? null,
+    exifModel: body?.exifModel ?? null,
+    exifLens: body?.exifLens ?? null,
+    exifFNumber: body?.exifFNumber ?? null,
+    exifExposure: body?.exifExposure ?? null,
+    exifIso: body?.exifIso ?? null,
+    exifFocal: body?.exifFocal ?? null,
+    exifTakenAt: body?.exifTakenAt ?? null,
+    exifLat: body?.exifLat ?? null,
+    exifLng: body?.exifLng ?? null,
     visibility: allowedVisibility
   });
 

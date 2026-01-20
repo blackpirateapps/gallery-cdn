@@ -193,12 +193,11 @@ main {
   margin-top: 16px;
 }
 
-.detail-exif pre {
-  background: #151310;
-  border-radius: 12px;
-  padding: 12px;
-  overflow: auto;
-  font-size: 12px;
+.exif-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
 }
 
 .lightbox {
@@ -385,6 +384,12 @@ main {
 .upload-fields {
   display: grid;
   gap: 12px;
+}
+
+.upload-exif {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
 }
 
 .upload-inline {

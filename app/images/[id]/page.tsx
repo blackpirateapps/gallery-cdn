@@ -34,14 +34,17 @@ export default async function ImageDetailPage({ params }: { params: { id: string
     );
   }
 
-  let exif: Record<string, unknown> | null = null;
-  if (image.exif_json) {
-    try {
-      exif = JSON.parse(image.exif_json) as Record<string, unknown>;
-    } catch {
-      exif = null;
-    }
-  }
+  const exifRows = [
+    ['Camera', [image.exif_make, image.exif_model].filter(Boolean).join(' ')],
+    ['Lens', image.exif_lens],
+    ['Aperture', image.exif_fnumber],
+    ['Exposure', image.exif_exposure],
+    ['ISO', image.exif_iso],
+    ['Focal length', image.exif_focal],
+    ['Taken at', image.exif_taken_at],
+    ['Latitude', image.exif_lat],
+    ['Longitude', image.exif_lng]
+  ].filter(([, value]) => value);
 
   return (
     <>
@@ -75,7 +78,18 @@ export default async function ImageDetailPage({ params }: { params: { id: string
             </div>
             <div className="detail-exif">
               <div className="badge">EXIF</div>
-              {exif ? <pre>{JSON.stringify(exif, null, 2)}</pre> : <div>No EXIF stored.</div>}
+              {exifRows.length ? (
+                <div className="exif-grid">
+                  {exifRows.map(([label, value]) => (
+                    <div key={label}>
+                      <div className="badge">{label}</div>
+                      <div>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div>No EXIF stored.</div>
+              )}
             </div>
           </div>
         </div>

@@ -14,7 +14,16 @@ type ImageRecord = {
   description: string | null;
   tag: string | null;
   location: string | null;
-  exif_json: string | null;
+  exif_make: string | null;
+  exif_model: string | null;
+  exif_lens: string | null;
+  exif_fnumber: string | null;
+  exif_exposure: string | null;
+  exif_iso: string | null;
+  exif_focal: string | null;
+  exif_taken_at: string | null;
+  exif_lat: string | null;
+  exif_lng: string | null;
   visibility: string | null;
   created_at: number;
 };
@@ -30,7 +39,16 @@ export default function AdminClient() {
   const [description, setDescription] = useState('');
   const [tag, setTag] = useState('');
   const [location, setLocation] = useState('');
-  const [exifText, setExifText] = useState('');
+  const [exifMake, setExifMake] = useState('');
+  const [exifModel, setExifModel] = useState('');
+  const [exifLens, setExifLens] = useState('');
+  const [exifFNumber, setExifFNumber] = useState('');
+  const [exifExposure, setExifExposure] = useState('');
+  const [exifIso, setExifIso] = useState('');
+  const [exifFocal, setExifFocal] = useState('');
+  const [exifTakenAt, setExifTakenAt] = useState('');
+  const [exifLat, setExifLat] = useState('');
+  const [exifLng, setExifLng] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
   const formRef = useRef<HTMLFormElement | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -38,7 +56,16 @@ export default function AdminClient() {
   const [editDescription, setEditDescription] = useState('');
   const [editTag, setEditTag] = useState('');
   const [editLocation, setEditLocation] = useState('');
-  const [editExifText, setEditExifText] = useState('');
+  const [editExifMake, setEditExifMake] = useState('');
+  const [editExifModel, setEditExifModel] = useState('');
+  const [editExifLens, setEditExifLens] = useState('');
+  const [editExifFNumber, setEditExifFNumber] = useState('');
+  const [editExifExposure, setEditExifExposure] = useState('');
+  const [editExifIso, setEditExifIso] = useState('');
+  const [editExifFocal, setEditExifFocal] = useState('');
+  const [editExifTakenAt, setEditExifTakenAt] = useState('');
+  const [editExifLat, setEditExifLat] = useState('');
+  const [editExifLng, setEditExifLng] = useState('');
   const [editVisibility, setEditVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
 
   const totalCount = images.length;
@@ -46,8 +73,39 @@ export default function AdminClient() {
   const unlistedCount = images.filter((image) => image.visibility === 'unlisted').length;
 
   const hasFormData = useMemo(
-    () => title || description || tag || location || exifText || visibility !== 'public',
-    [title, description, tag, location, exifText, visibility]
+    () =>
+      title ||
+      description ||
+      tag ||
+      location ||
+      exifMake ||
+      exifModel ||
+      exifLens ||
+      exifFNumber ||
+      exifExposure ||
+      exifIso ||
+      exifFocal ||
+      exifTakenAt ||
+      exifLat ||
+      exifLng ||
+      visibility !== 'public',
+    [
+      title,
+      description,
+      tag,
+      location,
+      exifMake,
+      exifModel,
+      exifLens,
+      exifFNumber,
+      exifExposure,
+      exifIso,
+      exifFocal,
+      exifTakenAt,
+      exifLat,
+      exifLng,
+      visibility
+    ]
   );
 
   async function loadImages() {
@@ -128,38 +186,55 @@ export default function AdminClient() {
     try {
       const exifData = (await exifr.parse(file, { gps: true })) as Record<string, unknown> | null;
       if (exifData) {
-        const payload: Record<string, unknown> = {
-          make: exifData.Make || exifData.make || null,
-          model: exifData.Model || exifData.model || null,
-          lensModel: exifData.LensModel || exifData.lensModel || null,
-          fNumber: exifData.FNumber || exifData.fNumber || null,
-          exposureTime: exifData.ExposureTime || exifData.exposureTime || null,
-          iso: exifData.ISO || exifData.iso || null,
-          focalLength: exifData.FocalLength || exifData.focalLength || null,
-          takenAt:
+        const latitude = typeof exifData.latitude === 'number' ? exifData.latitude : null;
+        const longitude = typeof exifData.longitude === 'number' ? exifData.longitude : null;
+        setExifMake(String(exifData.Make || exifData.make || ''));
+        setExifModel(String(exifData.Model || exifData.model || ''));
+        setExifLens(String(exifData.LensModel || exifData.lensModel || ''));
+        setExifFNumber(String(exifData.FNumber || exifData.fNumber || ''));
+        setExifExposure(String(exifData.ExposureTime || exifData.exposureTime || ''));
+        setExifIso(String(exifData.ISO || exifData.iso || ''));
+        setExifFocal(String(exifData.FocalLength || exifData.focalLength || ''));
+        setExifTakenAt(
+          String(
             exifData.DateTimeOriginal ||
-            exifData.CreateDate ||
-            exifData.dateTimeOriginal ||
-            exifData.createDate ||
-            null,
-          latitude: exifData.latitude ?? null,
-          longitude: exifData.longitude ?? null
-        };
-        Object.keys(payload).forEach((key) => {
-          if (payload[key] === null) delete payload[key];
-        });
-        setExifText(JSON.stringify(payload, null, 2));
-        if (typeof exifData.latitude === 'number' && typeof exifData.longitude === 'number') {
-          setLocation(`${exifData.latitude.toFixed(6)}, ${exifData.longitude.toFixed(6)}`);
+              exifData.CreateDate ||
+              exifData.dateTimeOriginal ||
+              exifData.createDate ||
+              ''
+          )
+        );
+        setExifLat(latitude !== null ? latitude.toFixed(6) : '');
+        setExifLng(longitude !== null ? longitude.toFixed(6) : '');
+        if (latitude !== null && longitude !== null) {
+          setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
         }
         pushDebug('EXIF parsed and autofilled.');
       } else {
-        setExifText('');
+        setExifMake('');
+        setExifModel('');
+        setExifLens('');
+        setExifFNumber('');
+        setExifExposure('');
+        setExifIso('');
+        setExifFocal('');
+        setExifTakenAt('');
+        setExifLat('');
+        setExifLng('');
         pushDebug('No EXIF detected.');
       }
     } catch (error) {
       pushDebug('Failed to read EXIF data.');
-      setExifText('');
+      setExifMake('');
+      setExifModel('');
+      setExifLens('');
+      setExifFNumber('');
+      setExifExposure('');
+      setExifIso('');
+      setExifFocal('');
+      setExifTakenAt('');
+      setExifLat('');
+      setExifLng('');
     }
   }
 
@@ -266,18 +341,6 @@ export default function AdminClient() {
       pushDebug('Uploaded thumbnail to R2.');
     }
 
-    let exifPayload: Record<string, unknown> | null = null;
-    if (exifText) {
-      try {
-        exifPayload = JSON.parse(exifText);
-      } catch {
-        setStatus('EXIF JSON is invalid.');
-        pushDebug('EXIF JSON parse failed.');
-        setUploading(false);
-        return;
-      }
-    }
-
     const recordResponse = await fetch('/api/images/record', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -290,7 +353,16 @@ export default function AdminClient() {
         description,
         tag,
         location,
-        exif: exifPayload,
+        exifMake,
+        exifModel,
+        exifLens,
+        exifFNumber,
+        exifExposure,
+        exifIso,
+        exifFocal,
+        exifTakenAt,
+        exifLat,
+        exifLng,
         visibility
       })
     });
@@ -317,7 +389,16 @@ export default function AdminClient() {
     setDescription('');
     setTag('');
     setLocation('');
-    setExifText('');
+    setExifMake('');
+    setExifModel('');
+    setExifLens('');
+    setExifFNumber('');
+    setExifExposure('');
+    setExifIso('');
+    setExifFocal('');
+    setExifTakenAt('');
+    setExifLat('');
+    setExifLng('');
     setVisibility('public');
     formRef.current?.reset();
     await loadImages();
@@ -341,7 +422,16 @@ export default function AdminClient() {
     setEditDescription(image.description || '');
     setEditTag(image.tag || '');
     setEditLocation(image.location || '');
-    setEditExifText(image.exif_json || '');
+    setEditExifMake(image.exif_make || '');
+    setEditExifModel(image.exif_model || '');
+    setEditExifLens(image.exif_lens || '');
+    setEditExifFNumber(image.exif_fnumber || '');
+    setEditExifExposure(image.exif_exposure || '');
+    setEditExifIso(image.exif_iso || '');
+    setEditExifFocal(image.exif_focal || '');
+    setEditExifTakenAt(image.exif_taken_at || '');
+    setEditExifLat(image.exif_lat || '');
+    setEditExifLng(image.exif_lng || '');
     setEditVisibility(
       image.visibility === 'private' || image.visibility === 'unlisted' ? image.visibility : 'public'
     );
@@ -353,22 +443,21 @@ export default function AdminClient() {
     setEditDescription('');
     setEditTag('');
     setEditLocation('');
-    setEditExifText('');
+    setEditExifMake('');
+    setEditExifModel('');
+    setEditExifLens('');
+    setEditExifFNumber('');
+    setEditExifExposure('');
+    setEditExifIso('');
+    setEditExifFocal('');
+    setEditExifTakenAt('');
+    setEditExifLat('');
+    setEditExifLng('');
     setEditVisibility('public');
   }
 
   async function saveEdit() {
     if (!editingId) return;
-    let exifPayload: Record<string, unknown> | null = null;
-    if (editExifText) {
-      try {
-        exifPayload = JSON.parse(editExifText);
-      } catch {
-        setStatus('Edit EXIF JSON is invalid.');
-        return;
-      }
-    }
-
     const response = await fetch(`/api/images/${editingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -377,7 +466,16 @@ export default function AdminClient() {
         description: editDescription,
         tag: editTag,
         location: editLocation,
-        exif: exifPayload,
+        exifMake: editExifMake,
+        exifModel: editExifModel,
+        exifLens: editExifLens,
+        exifFNumber: editExifFNumber,
+        exifExposure: editExifExposure,
+        exifIso: editExifIso,
+        exifFocal: editExifFocal,
+        exifTakenAt: editExifTakenAt,
+        exifLat: editExifLat,
+        exifLng: editExifLng,
         visibility: editVisibility
       })
     });
@@ -497,13 +595,78 @@ export default function AdminClient() {
                   onChange={(event) => setLocation(event.target.value)}
                 />
               </div>
-              <textarea
-                className="input"
-                placeholder="EXIF data (JSON)"
-                rows={6}
-                value={exifText}
-                onChange={(event) => setExifText(event.target.value)}
-              />
+              <div className="upload-exif">
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Camera make"
+                  value={exifMake}
+                  onChange={(event) => setExifMake(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Camera model"
+                  value={exifModel}
+                  onChange={(event) => setExifModel(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Lens"
+                  value={exifLens}
+                  onChange={(event) => setExifLens(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="F-number"
+                  value={exifFNumber}
+                  onChange={(event) => setExifFNumber(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Exposure"
+                  value={exifExposure}
+                  onChange={(event) => setExifExposure(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="ISO"
+                  value={exifIso}
+                  onChange={(event) => setExifIso(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Focal length"
+                  value={exifFocal}
+                  onChange={(event) => setExifFocal(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Taken at"
+                  value={exifTakenAt}
+                  onChange={(event) => setExifTakenAt(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Latitude"
+                  value={exifLat}
+                  onChange={(event) => setExifLat(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Longitude"
+                  value={exifLng}
+                  onChange={(event) => setExifLng(event.target.value)}
+                />
+              </div>
               <div className="upload-inline">
                 <select
                   className="input"
@@ -606,13 +769,78 @@ export default function AdminClient() {
                 value={editLocation}
                 onChange={(event) => setEditLocation(event.target.value)}
               />
-              <textarea
-                className="input"
-                placeholder="EXIF data (JSON)"
-                rows={6}
-                value={editExifText}
-                onChange={(event) => setEditExifText(event.target.value)}
-              />
+              <div className="upload-exif">
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Camera make"
+                  value={editExifMake}
+                  onChange={(event) => setEditExifMake(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Camera model"
+                  value={editExifModel}
+                  onChange={(event) => setEditExifModel(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Lens"
+                  value={editExifLens}
+                  onChange={(event) => setEditExifLens(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="F-number"
+                  value={editExifFNumber}
+                  onChange={(event) => setEditExifFNumber(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Exposure"
+                  value={editExifExposure}
+                  onChange={(event) => setEditExifExposure(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="ISO"
+                  value={editExifIso}
+                  onChange={(event) => setEditExifIso(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Focal length"
+                  value={editExifFocal}
+                  onChange={(event) => setEditExifFocal(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Taken at"
+                  value={editExifTakenAt}
+                  onChange={(event) => setEditExifTakenAt(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Latitude"
+                  value={editExifLat}
+                  onChange={(event) => setEditExifLat(event.target.value)}
+                />
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Longitude"
+                  value={editExifLng}
+                  onChange={(event) => setEditExifLng(event.target.value)}
+                />
+              </div>
               <select
                 className="input"
                 value={editVisibility}
